@@ -1,0 +1,4020 @@
+#+TITLE: Languages and Abstractions for High-Performance Scientific Computing
+#+SUBTITLE: CS598 APK
+#+AUTHOR: Andreas Kloeckner
+#+DATE: Fall 2018
+
+#+BEAMER_HEADER: \setbeamertemplate{navigation symbols}{}
+
+# /!\ Requires global customization if used directly in emacs
+# (No action required if using ./make.sh)
+#  '(org-beamer-environments-extra (quote (("hidden" "h" "\\begin{hidden}%O" "\\end{hidden}"))))
+
+#+BEAMER_HEADER: \usepackage{environ}
+#+BEAMER_HEADER: \usepackage{tcolorbox}
+#+BEAMER_HEADER: \newif\ifshowhidden
+#+BEAMER_HEADER: \showhiddentrue
+#+BEAMER_HEADER: \def\fillinbox#1{\begin{tcolorbox}[height=#1]\end{tcolorbox}}
+#+BEAMER_HEADER: \NewEnviron{hidden}[1][1.5cm]{\ifshowhidden\begin{tcolorbox}\BODY\end{tcolorbox}\else\fillinbox{#1}\fi}
+
+#+BEAMER_HEADER: \let\plainhref=\href
+#+BEAMER_HEADER: \let\plainurl=\url
+#+BEAMER_HEADER: \def\href#1#2{\plainhref{#1}{{\color{blue}\uline{#2}}}}
+#+BEAMER_HEADER: \def\url#1{\href{#1}{\texttt{#1}}}
+
+#+BEAMER_HEADER: \usepackage{pifont}
+#+BEAMER_HEADER: \usepackage[normalem]{ulem}
+#+BEAMER_HEADER: \def\classurl{https://relate.cs.illinois.edu/course/cs598apk-f18/}
+#+BEAMER_HEADER: \def\activity#1{\href{\classurl/flow/#1/start}{Activity: #1}}
+#+BEAMER_HEADER: \def\demo#1{\href{\classurl/f/demos/upload/#1.html}{Demo: #1}}
+#+BEAMER_HEADER: \def\demonote#1{\ifshowhidden\medskip\par Demo Instructions: {\color{blue} #1}\fi}
+
+#+BEAMER_HEADER: \usepackage{tikz}
+#+BEAMER_HEADER: \usetikzlibrary{calc}
+#+BEAMER_HEADER: \usetikzlibrary{positioning}
+#+BEAMER_HEADER: \usetikzlibrary{shapes.geometric}
+#+BEAMER_HEADER: \usetikzlibrary{shapes.arrows}
+#+BEAMER_HEADER: \usetikzlibrary{shapes.symbols}
+#+BEAMER_HEADER: \usetikzlibrary{shadows}
+#+BEAMER_HEADER: \usetikzlibrary{chains}
+#+BEAMER_HEADER: \usetikzlibrary{fit}
+#+BEAMER_HEADER: \usetikzlibrary{snakes}
+
+#+BEAMER_HEADER: \tikzstyle{every picture}+=[remember picture]
+#+BEAMER_HEADER: \pgfdeclarelayer{background}
+#+BEAMER_HEADER: \pgfdeclarelayer{foreground}
+#+BEAMER_HEADER: \pgfsetlayers{background,main,foreground}
+
+#+BEAMER_HEADER: \newcommand{\cc}{\raisebox{-0.25ex}{\includegraphics[height=2ex]{cc.pdf}}}
+
+#+BEAMER_HEADER: \AtBeginSection[] {
+#+BEAMER_HEADER:   \begin{frame}<beamer>
+#+BEAMER_HEADER:   \frametitle{Outline}
+#+BEAMER_HEADER:   \tableofcontents[sectionstyle=show/shaded,subsectionstyle=show/show/hide]
+#+BEAMER_HEADER: \end{frame}
+#+BEAMER_HEADER: }
+#+BEAMER_HEADER: \AtBeginSubsection[] {
+#+BEAMER_HEADER:   \begin{frame}<beamer>
+#+BEAMER_HEADER:   \frametitle{Outline}
+#+BEAMER_HEADER:   \tableofcontents[sectionstyle=show/shaded,subsectionstyle=show/shaded/hide]
+#+BEAMER_HEADER: \end{frame}
+#+BEAMER_HEADER: }
+
+# https://tex.stackexchange.com/questions/55058/accessing-the-current-overlay-number-in-beamer#55066
+#+BEAMER_HEADER: \makeatletter
+#+BEAMER_HEADER: \newcommand*{\overlaynumber}{\number\beamer@slideinframe}
+#+BEAMER_HEADER: \makeatother
+
+#+startup: beamer
+#+LATEX_CLASS: beamer
+# (comment) +LaTeX_CLASS_OPTIONS: [bigger]
+
+#+LATEX_COMPILER: pdflatex
+#+OPTIONS: H:3 toc:nil ':t tasks:t
+#+BEAMER_THEME: default
+#+COLUMNS: %45ITEM %10BEAMER_ENV(Env) %10BEAMER_ACT(Act) %4BEAMER_COL(Col) %8BEAMER_OPT(Opt)
+
+* Introduction
+  :PROPERTIES:
+  :RELATE_TREE_SECTION_NAME: intro
+  :RELATE_TREE_SECTION_OPENED: true
+  :END:
+** Notes
+  :PROPERTIES:
+  :RELATE_TREE_ICON: fa fa-book
+  :RELATE_TREE_LINK: https://andreask.cs.illinois.edu/cs598apk-f18/notes.pdf
+  :END:
+
+** About This Class
+*** Why this class?
+
+- Setting: Performance-Constrained Code
+
+  When is a code performance-constrained?
+
+  #+LATEX:\begin{hidden}
+  A desirable quality (fidelity/capability) is limited by
+  computational cost on a given computer.
+  #+LATEX:\end{hidden}
+
+- If your code is performance-constrained, what is the /best/ approach?
+
+  #+LATEX:\begin{hidden}
+  Use a more efficient method/algorithm.
+  #+LATEX:\end{hidden}
+
+- If your code is performance-constrained, what is the /second-best/ approach?
+
+  #+LATEX:\begin{hidden}
+  Ensure the current algorithm uses your computer
+  efficiently. Observe that this is a /desperate measure/.
+  #+LATEX:\end{hidden}
+
+*** Examples of Performance-Constrained Codes
+**** Examples list                                                 :B_hidden:
+     :PROPERTIES:
+     :BEAMER_env: hidden
+     :BEAMER_OPT: [4cm]
+     :END:
+
+- Simulation codes
+  - Weather/climate models
+  - Oil/gas exploration
+  - Electronic structure
+  - Electromagnetic design
+  - Aerodynamic design
+  - Molecular dynamics / biological systems
+  - Cryptanalysis
+- Machine Learning
+- Data Mining
+# - ASIC/FPGA place and route
+
+**** End example list                                       :B_ignoreheading:
+     :PROPERTIES:
+     :BEAMER_env: ignoreheading
+     :END:
+
+Discussion:
+
+- In what way are these codes constrained?
+- How do these scale in terms of the problem size?
+
+*** What Problem are we Trying To Solve?
+
+\[
+({C}_{ij})_{i,j=1}^{m,n} = \sum_{k=1}^\ell A_{ik}B_{kj}
+\]
+
+Reference BLAS DGEMM code:
+[[https://github.com/Reference-LAPACK/lapack/blob/master/BLAS/SRC/dgemm.f]]
+
+OpenBLAS DGEMM code:
+[[https://github.com/xianyi/OpenBLAS/blob/develop/kernel/x86_64/dgemm_kernel_4x8_sandy.S]]
+
+\medskip
+#+LATEX: \demo{intro/DGEMM Performance}
+
+#+LATEX: \demonote{Compare OpenBLAS against Fortran BLAS on large square matrix}
+
+*** Goals: What are we Allowed to Ask For?
+
+- Goal: "make efficient use of the machine"
+- In general: not an easy question to answer
+- In theory: limited by /some/ peak machine throughput
+  - Memory Access
+  - Compute
+- In practice: many other limits (Instruction cache, TLB, memory hierarchy, NUMA, registers)
+
+*** Class web page
+
+#+BEGIN_CENTER
+[[https://bit.ly/hpcabstr-f18]]
+#+END_CENTER
+
+contains:
+- Class outline
+- Slides/demos/materials
+- Assignments
+- Virtual Machine Image
+- Piazza
+- Grading Policies
+- Video
+- HW1 (soon)
+
+*** Welcome Survey
+
+Please go to:
+
+#+BEGIN_CENTER
+[[https://bit.ly/hpcabstr-f18]]
+#+END_CENTER
+
+and click on 'Start Activity'.
+
+\medskip
+If you are seeing this later, you can find the activity at
+#+LATEX: \activity{welcome-survey}.
+
+*** Grading / Workload
+
+Four components:
+
+- Homework: 25%
+- Paper Presentation: 25%
+  - 30 minutes (two per class)
+  - Presentation sessions scheduled throughout the semester
+  - Paper list on web page
+  - Sign-up survey: soon
+- Paper Reactions: 10%
+- Computational Project: 40%
+
+*** Approaches to High Performance
+
+- Libraries (seen)
+- Black-box Optimizing Compilers
+- Compilers with Directives
+- Code Transform Systems
+- "Active Libraries"
+
+Q: Give examples of the latter two.
+
+#+LATEX: \begin{hidden}
+- Code Transform System: [[http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.214.8396&rep=rep1&type=pdf#page=22][CHiLL]]
+- Active Library: [[https://pytorch.org/tutorials/beginner/pytorch_with_examples.html][PyTorch]]
+#+LATEX: \end{hidden}
+
+*** Libraries: A Case Study
+
+\[
+({C}_{ij})_{i,j=1}^{m,n} = \sum_{k=1}^\ell A_{ik}B_{kj}
+\]
+
+\medskip
+#+LATEX: \demo{intro/DGEMM Performance}
+
+#+LATEX: \demonote{Compare OpenBLAS on large square and small odd-shape matrices}
+
+*** Do Libraries Stand a Chance? (in general)
+
+- Tremendously successful approach --- Name some examples
+
+  \smallskip
+  #+LATEX: \begin{hidden}
+  (e.g.) LAPACK, Eigen, UMFPACK, FFTW, Numpy, Deal.ii
+  #+LATEX: \end{hidden}
+
+- Saw: Three simple integer parameters suffice to lose 'good' performance
+  - Recent effort: "Batch BLAS" e.g. [[http://www.icl.utk.edu/files/publications/2017/icl-utk-1032-2017.pdf]]
+
+- Separation of Concerns
+
+  \smallskip
+  Example: Finite differences -- e.g. implement $\partial_x$, $\partial_y$, $\partial_z$ as separate
+  (library) subroutines ---  What is the problem?
+
+  \smallskip
+  #+LATEX: \begin{hidden}
+  Data locality $\rightarrow$ data should be traversed once,  $\partial_x$, $\partial_y$, $\partial_z$ computed together
+
+  Separation of concerns $\rightarrow$  each operator traverses the data separately.
+  #+LATEX: \end{hidden}
+
+- Flexibility and composition
+
+*** (Black-Box) Optimizing Compiler: Challenges
+
+Why is black-box optimizing compilation so difficult?
+
+- Application developer knowledge lost
+
+  - Simple example: "Rough" matrix sizes
+  - Data-dependent control flow
+  - Data-dependent access patterns
+  - Activities of other, possibly concurrent parts of the program
+  - Profile-guided optimization can recover some knowledge
+
+- Obtain proofs of required properties
+
+- Size of the search space
+
+  Consider [[http://polaris.cs.uiuc.edu/publications/padua.pdf]]
+
+*** Directive-Based Compiler: Challenges
+
+What is a directive-based compiler?
+
+#+LATEX: \demonote{
+Show =l2dformta_qbx= from =pyfmmlib/vec_wrappers.f90=.
+#+LATEX: }
+
+- Generally same as optimizing compiler
+- Make use of extra promises made by the user
+- What should the user promise?
+- Ideally: feedback cycle between compiler and user
+  - Often broken in both directions
+  - User may not know what the compiler did
+  - Compiler may not be able to express what it needs
+- Directives: generally not mandatory
+
+*** Lies, Lies Everywhere
+
+- Semantics form a contract between programmer and language/environment
+- Within those bounds, the implementation is free to do as it chooses
+- True at every level:
+  - Assembly
+  - "High-level" language (C)
+
+  Give examples of lies at these levels:
+
+  #+LATEX: \begin{hidden}
+  - Assembly: Concurrent execution
+  - "High-level" language (C): (e.g.) strength reduction, eliminated ops
+  #+LATEX: \end{hidden}
+
+One approach: /Lie to yourself/
+
+- "Domain-specific languages" $\leftarrow$ A fresh language, I can do what I want!
+- Consistent semantics are notoriously hard to develop
+  - Especially as soon as you start allowing subsets of even (e.g.) C's integers
+
+*** Class Outline
+
+High-level Sections:
+
+- Intro, Armchair-level Computer Architecture
+- Machine Abstractions
+- Performance: Expectation, Experiment, Observation
+- Programming Languages for Performance
+- Program Representation and Optimization Strategies
+- Code Generation/JIT
+
+*** Survey: Class Makeup
+
+- Compiler class: 11 no, 3 yes
+- HPC class: 10 yes, 4 no
+- C: very proficient on average
+- Python: proficient on average
+- Assembly: some have experience
+- GPU: Half the class has experience, some substantial
+- CPU perf: Very proficient
+- 10 PhD, 4 Masters, mostly CS (plus physics, CEE, MechSE)
+
+*** Survey: Learning Goals
+
+\tiny
+- How to use hardware efficiently to write fast code (1 response)
+- I want to learn about commonly encountered problems in HPC and efficient ways to approach and solve them. (1 response)
+- about writing high performance code for large scale problems. (1 response)
+- more (and more) about high-performance computing beyond parallel programming. (1 response)
+- This summer (while interning at Sandia national labs), I got familiar with GPU programming using Kokkos as the back end. I enjoyed this work immensely, and hope to continue learning about it, especially so that I can become better at writing GPU code myself. I am also interested in the relationship between a higher level abstraction (Kokkos), the compiler, and the actual compute device (GPU/CPU) relate together, and what tricks we have to help fix issues regarding this. For example, Kokkos uses a small amount of template metaprogramming to convert the source code into actual code. (1 response)
+- Some GPU stuff, course description sounded interesting for my research in HPC/Parallel Computing. Would be interesting to look at different programming models or abstractions for HPC. (1 response)
+- Getting better at doing high performance computing. (1 response)
+- become more familiar with abstractions (1 response)
+- I want to be able to auto generate performance portable C++ code, specifically for small batched tensor contractions. (1 response)
+- Languages and abstractions for high-performance scientific computing (1 response)
+- Investigating problems in high performance computing and looking for solutions, especially large-scale and using GPUs. (1 response)
+- Better ways to efficiently (in terms of human time) write high-performance code that may be useful to/readable by others (1 response)
+- about high-level languages and frameworks for high performance computing, the different interfaces they expose, compilation and runtime techniques they use, and the tradeoffs of these for an application developer. (1 response)
+
+** Why Bother with Parallel Computers?
+*** Moore's Law
+
+#+ATTR_LATEX: :height 8cm
+[[./media/moores-law.pdf]]
+
+\begin{tikzpicture} [overlay]
+    \node [above left=10mm of current page.south east,
+    draw,drop shadow,fill=white,inner sep=5mm,thick,text width=5cm]
+    {
+      \textbf{Issue:} More transistors = faster?
+
+      \begin{multline*}
+          \frac{\text{Work}}s\; = \;\text{Clock Frequency} \; \\
+          \times \; \text{Work/Clock}
+      \end{multline*}
+
+    } ;
+\end{tikzpicture}
+
+*** Dennard Scaling of MOSFETs
+
+| *Parameter*               | *Factor*     |
+|---------------------------+--------------|
+| Dimension                 | $1/\kappa$   |
+| Voltage                   | $1/\kappa$   |
+| Current                   | $1/\kappa$   |
+| Capacitance               | $1/\kappa$   |
+| Delay Time                | $1/\kappa$   |
+| Power dissipation/circuit | $1/\kappa^2$ |
+| Power density             | $1$          |
+
+[Dennard et al. '74, via Bohr '07]
+
+- Frequency = Delay time${}^{-1}$
+
+*** MOSFETs ("CMOS" -- "complementary" MOS): Schematic
+
+#+ATTR_LATEX: :width 0.8\textwidth
+[[./media/dennard-mosfet.png]]
+
+[Dennard et al. `74]
+
+*** MOSFETs: Scaling
+
+#+ATTR_LATEX: :width \textwidth
+[[./media/mosfet-scaling.png]]
+
+[Intel Corp.]
+
+- 'New' problem at small scale:
+
+  Sub-threshold leakage (due to low voltage, small structure)
+
+  Dennard scaling is over -- and has been for a while.
+
+*** Peak Architectural Instructions per Clock: Intel
+
+| *CPU*                  | *IPC* | *Year* |
+|------------------------+-------+--------|
+| Pentium 1              |   1.1 |   1993 |
+| Pentium MMX            |   1.2 |   1996 |
+| Pentium 3              |   1.9 |   1999 |
+| Pentium 4 (Willamette) |   1.5 |   2003 |
+| Pentium 4 (Northwood)  |   1.6 |   2003 |
+| Pentium 4 (Prescott)   |   1.8 |   2003 |
+| Pentium 4 (Gallatin)   |   1.9 |     20 |
+| Pentium D              |     2 |   2005 |
+| Pentium M              |   2.5 |   2003 |
+| Core 2                 |     3 |   2006 |
+| Sandy Bridge...        |  4ish |   2011 |
+
+[Charlie Brej [[http://brej.org/blog/?p=15]]]
+
+Discuss: How do we get out of this dilemma?
+
+*** The Performance Dilemma
+
+- IPC: Brick Wall
+- Clock Frequency: Brick Wall
+
+Ideas:
+
+#+LATEX: \begin{hidden}
+- Make one instruction do more copies of the same thing ("SIMD")
+- Use copies of the same processor ("SPMD"/"MPMD")
+#+LATEX: \end{hidden}
+
+Question: What is the /conceptual/ difference between those ideas?
+
+#+LATEX: \begin{hidden}
+- SIMD executes multiple program instances in lockstep.
+- SPMD has no synchronization assumptions.
+#+LATEX: \end{hidden}
+
+*** The Performance Dilemma: Another Look
+
+- *Really:* A crisis of the 'starts-at-the-top-ends-at-the-bottom' prorgramming model
+- *Tough luck:* Most of our codes are written that way
+- *Even tougher luck:* Everybody on the planet is /trained/ to write codes this way
+
+So:
+
+- *Need:* Different tools/abstractions to write those codes
+
+** Lowest Accessible Abstraction: Assembly
+*** Processor arch macro                                    :B_ignoreheading:
+    :PROPERTIES:
+    :BEAMER_env: ignoreheading
+    :END:
+
+#+BEGIN_EXPORT latex
+\def\procpic{
+  \node [rectangle,draw,thick,fill=green!30, inner xsep=4cm,
+    anchor=south] at (0,0) (idbus) { Internal Bus };
+  \node (reg) [rectangle,draw,thick,fill=black!20,
+    inner ysep=5mm,anchor=south]
+    at ($ (idbus.north) + (-2cm,0.75) $) {Register File} ;
+  \node (flags) [anchor=south east,draw,thick,fill=black!20,inner ysep=0.75mm]
+    at(reg.south east) {Flags} ;
+  \node (alu) [trapezium,
+    trapezium left angle=130,
+    trapezium right angle=130,
+    inner ysep=3mm,
+    draw,thick,fill=black!20,anchor=north]
+    at ($ (idbus.south) + (2,-0.75) $) {Data ALU} ;
+  \node (addr) [trapezium,
+    trapezium left angle=50,
+    trapezium right angle=50,
+    inner ysep=3mm,
+    draw,thick,fill=black!20,anchor=south west]
+    at ($ (reg.north) + (0,0.75) $) {Address ALU} ;
+  \node (ctrl) [arrow box,draw,thick,fill=black!20,anchor=north,
+    inner ysep=5mm,arrow box arrows={north:.475cm,east:.475cm},
+    arrow box shaft width=2mm,inner xsep=4mm]
+    at ($ (idbus.south) + (-2cm,-0.275) $) {Control Unit} ;
+  \node (pc) [anchor=north east,draw,thick,fill=black!20,inner ysep=0.75mm]
+    at(ctrl.north east) {PC} ;
+  \node (mem) [rectangle,draw,thick,fill=black!20,
+    inner ysep=3mm,anchor=west,rotate=90,inner xsep=5mm,minimum
+    width=3.5cm, minimum height=1cm]
+    at ($ (idbus.north) + (2,0.75) $) { } ;
+  \node at (mem.south east) [anchor=north west] {Memory Interface} ;
+  \draw [line width=1mm,<-] (alu.north west) -- +(0,0.75) ;
+  \draw [line width=1mm,<-] (alu.north east) -- +(0,0.75) ;
+  \draw [line width=1mm,->] (alu.south) |- +(1,-0.25) -| ($ (idbus.south) + (4.5,0) $);
+  \draw [line width=1mm,<->] (reg.south) -- +(0,-0.75);
+  \draw [line width=1mm,->] (reg.north) -- (addr.south west);
+  \draw [line width=1mm,->] ($ (idbus.north) + (-0.5,0) $) |- ++(0,2.5) -| (addr.south east);
+  \draw [line width=1mm,->] ($ (idbus.south) + (-4,0) $) |- (ctrl.west)
+    node [pos=0.3,anchor=east,font=\footnotesize,text width=7mm] {Insn. fetch};
+  \draw [line width=1mm,->] (addr.north) |- ++(2.6,0.25) |- (mem.north) ;
+  \draw [line width=1mm,<->] (mem.west) -- +(0,-0.75) ;
+  \draw [line width=1mm,<->] (mem.west) -- +(0,-0.75) ;
+  \draw [line width=1mm,<->] (mem.west) -- +(0,-0.75) ;
+  \draw [line width=1mm,<->] ($ (mem.south) + (0,-.75) $) coordinate (dataexit) -- +(0.75,0)
+    node [pos=1,anchor=west] {Data Bus} ;
+  \draw [line width=1mm,->] ($ (mem.south) + (0,.75) $) coordinate (addrexit) -- +(0.75,0)
+    node [pos=1,anchor=west] {Address Bus} ;
+
+  \draw [line width=1mm,dotted,opacity=0.3] (dataexit) -| (mem.west) ;
+  \draw [line width=1mm,dotted,opacity=0.3] (addrexit) -| ++(-0.4,0) |- (mem.north) ;
+}
+#+END_EXPORT
+
+*** A Basic Processor: Closer to the Truth
+
+#+BEGIN_EXPORT latex
+\begin{tikzpicture}[scale=0.9]
+\procpic
+\end{tikzpicture}
+#+END_EXPORT
+
+- loosely based on Intel 8086
+- What's a [[http://en.wikipedia.org/wiki/Bus_(computing)][bus]]?
+
+*** A Very Simple Program
+
+**** C Source Code                                                 :B_column:
+     :PROPERTIES:
+     :BEAMER_col: 0.25
+     :END:
+
+#+BEGIN_SRC c
+int a = 5;
+int b = 17;
+int z = a * b;
+#+END_SRC
+
+**** Generated Assembly
+     :PROPERTIES:
+     :BEAMER_col: 0.75
+     :END:
+
+\footnotesize
+#+BEGIN_EXAMPLE
+4:    c7 45 f4 05 00 00 00 movl   $0x5,-0xc(%rbp)
+b:    c7 45 f8 11 00 00 00 movl   $0x11,-0x8(%rbp)
+12:   8b 45 f4             mov    -0xc(%rbp),%eax
+15:   0f af 45 f8          imul   -0x8(%rbp),%eax
+19:   89 45 fc             mov    %eax,-0x4(%rbp)
+1c:   8b 45 fc             mov    -0x4(%rbp),%eax
+#+END_EXAMPLE
+
+
+**** End columns                                            :B_ignoreheading:
+     :PROPERTIES:
+     :BEAMER_env: ignoreheading
+     :END:
+
+Things to know:
+
+- Question: Which is it?
+  - =<opcode> <src>, <dest>=
+  - =<opcode> <dest>, <src>=
+- [[http://en.wikipedia.org/wiki/Addressing_mode][Addressing modes]] (Immediate, Register, Base plus Offset)
+- [[http://en.wikipedia.org/wiki/Hexadecimal][0xHexadecimal]]
+
+*** A Very Simple Program: Another Look
+
+#+LATEX: \vspace*{2.5cm}
+#+BEGIN_CENTER
+\begin{tikzpicture}[transform canvas={scale=0.6}]
+  \procpic
+\end{tikzpicture}
+#+END_CENTER
+#+LATEX: \vspace*{1.5cm}
+
+\footnotesize
+#+BEGIN_EXAMPLE
+4:    c7 45 f4 05 00 00 00 movl   $0x5,-0xc(%rbp)
+b:    c7 45 f8 11 00 00 00 movl   $0x11,-0x8(%rbp)
+12:   8b 45 f4             mov    -0xc(%rbp),%eax
+15:   0f af 45 f8          imul   -0x8(%rbp),%eax
+19:   89 45 fc             mov    %eax,-0x4(%rbp)
+1c:   8b 45 fc             mov    -0x4(%rbp),%eax
+#+END_EXAMPLE
+
+*** A Very Simple Program: Intel Form
+
+#+BEGIN_EXAMPLE
+4:    c7 45 f4 05 00 00 00    mov    DWORD PTR [rbp-0xc],0x5
+b:    c7 45 f8 11 00 00 00    mov    DWORD PTR [rbp-0x8],0x11
+12:   8b 45 f4                mov    eax,DWORD PTR [rbp-0xc]
+15:   0f af 45 f8             imul   eax,DWORD PTR [rbp-0x8]
+19:   89 45 fc                mov    DWORD PTR [rbp-0x4],eax
+1c:   8b 45 fc                mov    eax,DWORD PTR [rbp-0x4]
+#+END_EXAMPLE
+
+- "Intel Form": (you might see this on the net)
+
+  =<opcode> <sized dest>, <sized source>=
+- Previous: "AT&T Form": (we'll use this)
+- Goal: Reading comprehension.
+- Don't understand an opcode?
+
+  [[https://en.wikipedia.org/wiki/X86_instruction_listings]]
+
+*** Assembly Loops
+
+**** C Source Code                                                 :B_column:
+     :PROPERTIES:
+     :BEAMER_col: 0.35
+     :END:
+
+#+BEGIN_SRC c
+int main()
+{
+  int y = 0, i;
+  for (i = 0;
+      y < 10; ++i)
+    y += i;
+  return y;
+}
+#+END_SRC
+
+**** Generated Assembly                                            :B_column:
+     :PROPERTIES:
+     :BEAMER_col: 0.7
+     :END:
+
+\scriptsize
+#+BEGIN_EXAMPLE
+0:    55                      push   %rbp
+1:    48 89 e5                mov    %rsp,%rbp
+4:    c7 45 f8 00 00 00 00    movl   $0x0,-0x8(%rbp)
+b:    c7 45 fc 00 00 00 00    movl   $0x0,-0x4(%rbp)
+12:   eb 0a                   jmp    1e <main+0x1e>
+14:   8b 45 fc                mov    -0x4(%rbp),%eax
+17:   01 45 f8                add    %eax,-0x8(%rbp)
+1a:   83 45 fc 01             addl   $0x1,-0x4(%rbp)
+1e:   83 7d f8 09             cmpl   $0x9,-0x8(%rbp)
+22:   7e f0                   jle    14 <main+0x14>
+24:   8b 45 f8                mov    -0x8(%rbp),%eax
+27:   c9                      leaveq
+28:   c3                      retq
+#+END_EXAMPLE
+
+**** End columns                                            :B_ignoreheading:
+     :PROPERTIES:
+     :BEAMER_env: ignoreheading
+     :END:
+
+\bigskip
+Things to know:
+- [[http://en.wikipedia.org/wiki/Status_register][Condition Codes (Flags)]]: Zero, Sign, Carry, etc.
+- [[http://en.wikipedia.org/wiki/Call_stack][Call Stack]]: Stack frame, stack pointer, base pointer
+- [[http://en.wikipedia.org/wiki/Application_binary_interface][ABI]]: Calling conventions
+
+#+LATEX: \demonote{C $\to$ Assembly mapping from \url{https://github.com/ynh/cpp-to-assembly}}
+
+*** Demos
+
+#+LATEX: \demo{intro/Assembly Reading Comprehension}
+
+\bigskip
+Demo: Source-to-assembly mapping
+
+Code to try:
+#+BEGIN_SRC c
+int main()
+{
+  int y = 0, i;
+  for (i = 0; y < 10; ++i)
+    y += i;
+  return y;
+}
+#+END_SRC
+
+** Architecture of an Execution Pipeline
+
+*** Modern Processors?
+
+All of this can be built in about 4000 transistors.
+
+(e.g. MOS 6502 in Apple II, Commodore 64, Atari 2600)
+\medskip
+
+So what exactly are Intel/ARM/AMD/Nvidia doing with the other *billions* of transistors?
+
+*** Execution in a Simple Processor
+
+[[./media/no-pipeline.png]]
+
+- [IF] Instruction fetch
+- [ID] Instruction Decode
+- [EX] Execution
+- [MEM] Memory Read/Write
+- [WB] Result Writeback
+
+[Wikipedia \cc]
+
+*** Solution: Pipelining
+
+[[./media/five-stage-pipeline.png]]
+
+[Wikipedia \cc]
+
+*** MIPS Pipeline: 110,000 transistors
+
+[[./media/mips-pipeline.png]]
+
+[Wikipedia \cc]
+
+*** Hazards and Bubbles
+
+#+ATTR_LATEX: :height 5cm
+[[./media/pipeline-bubble.pdf]]
+
+Q: Types of Pipeline Hazards? (aka: what can go wrong?)
+#+LATEX: \begin{hidden}
+- Data
+- Structural
+- Control
+#+LATEX: \end{hidden}
+
+[Wikipedia \cc]
+
+*** Demo
+
+#+LATEX: \demo{intro/Pipeline Performance Mystery}
+
+#+LATEX: \begin{hidden}
+- a, a: elapsed time 3.83603 s
+- a, b: elapsed time 2.58667 s
+- a, a unrolled: elapsed time 3.83673 s
+- aa, bb unrolled: elapsed time 1.92509 s
+- a, b unrolled: elapsed time 1.92084 s
+#+LATEX: \end{hidden}
+
+*** A Glimpse of a More Modern Processor
+
+#+ATTR_LATEX: :height 0.8\textheight
+[[./media/sandy-bridge-pipeline.png]]
+
+[David Kanter / Realworldtech.com]
+
+*** A Glimpse of a More Modern Processor: Frontend
+
+#+ATTR_LATEX: :height 0.8\textheight
+[[./media/sandy-bridge-pipeline-fe.png]]
+
+[David Kanter / Realworldtech.com]
+
+*** A Glimpse of a More Modern Processor: Backend
+
+#+ATTR_LATEX: :height 0.6\textheight
+[[./media/sandy-bridge-pipeline-be.png]]
+
+- *New concept:* Instruction-level parallelism ("ILP", "superscalar")
+- Where does the IPC number from earlier come from?
+
+\medskip
+[David Kanter / Realworldtech.com]
+
+*** Demo
+
+#+LATEX: \demo{intro/More Pipeline Mysteries}
+
+*** SMT/"Hyperthreading"
+
+**** SMT Diagram                                                   :B_column:
+    :PROPERTIES:
+    :BEAMER_col: 0.6
+    :END:
+
+#+BEGIN_CENTER
+\begin{tikzpicture}[scale=0.8]
+    \node [draw,thick,fill=red!30,minimum width=4cm,minimum height=1cm]
+    (fe) { Processor front end };
+
+    \foreach \i/\ofs in {1/-1.5, 2/-0.75, 3/0, 4/0.75,5/1.5}
+    {
+    \ifthenelse{\i < 4}
+    { \def\itemcolor{green!30} }
+    {
+      \ifthenelse{\overlaynumber = 1}
+      { \def\itemcolor{gray!20} }
+      { \def\itemcolor{blue!30} }
+      { }
+    }
+
+    \node [draw,thick,fill=\itemcolor,rotate=270,below=2cm of
+    fe,anchor=center,yshift=\ofs cm]
+      (exec\i) { Exec. Unit \i };
+    \draw [thick,->] (fe) -- (exec\i.west);
+    }
+
+    \uncover<1>{
+    \node[single arrow,draw,thick,shape border
+    rotate=270,fill=green!30,above=0cm of fe]
+    {
+      Program
+    };
+    }
+    \uncover<2->{
+    \node[single arrow,draw,thick,shape border
+    rotate=270,fill=green!30,above=0cm of fe,xshift=-0.5cm]
+    {
+      Thread 1
+    };
+    \node[single arrow,draw,thick,shape border
+    rotate=270,fill=blue!30,above=0cm of fe,xshift=0.5cm]
+    {
+      Thread 2
+    };
+    }
+\end{tikzpicture}
+#+END_CENTER
+
+**** SMT Issues                                                    :B_column:
+    :PROPERTIES:
+    :BEAMER_col: 0.4
+    :END:
+Q: Potential issues?
+
+#+LATEX: \begin{hidden}
+- $n\times$ the cache demand!
+- Power?
+- Some people just turn it off and manage their own ILP.
+#+LATEX: \end{hidden}
+
+** Architecture of a Memory System
+
+*** More Bad News from Dennard
+
+| *Parameter*     | *Factor*   |
+|-----------------+------------|
+| Dimension       | $1/\kappa$ |
+| Line Resistance | $\kappa$   |
+| Voltage drop    | $\kappa$   |
+| Response time   | $1$        |
+| Current density | $\kappa$   |
+
+[Dennard et al. `74, via Bohr `07]
+
+- The above scaling law is for on-chip interconnects.
+- Current $\sim$ Power /vs./ response time
+
+\bigskip
+Getting information from
+
+- processor to memory
+- one computer to the next
+
+is
+
+- slow (in /latency/)
+- power-hungry
+
+*** Somewhere Behind the Interconnect: Memory
+
+Performance characteristics of memory:
+
+- Bandwidth
+- Latency
+
+#+BEGIN_QUOTE
+Flops are cheap
+
+Bandwidth is money
+
+Latency is physics
+- M. Hoemmen
+#+END_QUOTE
+
+Minor addition (but important for us)?
+#+LATEX: \begin{hidden}
+- Bandwidth is money *and code structure*
+#+LATEX: \end{hidden}
+
+*** Latency is Physics: Distance
+
+#+ATTR_LATEX: :height 0.8\textheight
+[[./media/mainboard.jpeg]]
+
+[Wikipedia \cc]
+
+*** Latency is Physics: Electrical Model
+
+#+ATTR_LATEX: :height 0.6\textheight
+[[./media/capacitor-ground.pdf]]
+
+*** Latency is Physics: DRAM
+
+#+ATTR_LATEX: :height 0.8\textheight
+[[./media/dram.png]]
+
+[Wikipedia \cc]
+
+*** Latency is Physics: Performance Impact?
+
+What is the performance impact of high memory latency?
+
+#+LATEX: \begin{hidden}
+Processor stalled, waiting for data.
+#+LATEX: \end{hidden}
+
+\bigskip
+*Idea:*
+
+- Put a look-up table of recently-used data onto the chip.
+- [[http://en.wikipedia.org/wiki/CPU_cache][Cache]]
+
+*** Memory Hierarchy
+
+#+BEGIN_CENTER
+\begin{tikzpicture}[hieblock/.style={thick,draw,fill=green!20,
+text width=0.4\textwidth, text centered}]
+\node [hieblock] (reg) {Registers};
+\node [hieblock,below=3ex of reg] (l1) {L1 Cache};
+\node [hieblock,below=3ex of l1] (l2) {L2 Cache};
+\node [hieblock,below=3ex of l2] (l3) {L3 Cache};
+\node [hieblock,below=3ex of l3] (dram) {DRAM};
+\node [hieblock,below=3ex of dram] (virt) {Virtual Memory\\ (hard drive)};
+
+\node [right=2em of reg] {1 kB, 1 cycle };
+\node [right=2em of l1] {10 kB, 10 cycles };
+\node [right=2em of l2] {100 kB, 10 cycles };
+\node [right=2em of l3] {10 MB, 100 cycles };
+\node [right=2em of dram] {1 GB, 1000 cycles };
+\node [right=2em of virt] {1 TB, 1 M cycles };
+
+\draw [thick,<->] (reg) -- (l1) ;
+\draw [thick,<->] (l1) -- (l2) ;
+\draw [thick,<->] (l2) -- (l3) ;
+\draw [thick,<->] (l3) -- (dram) ;
+\draw [thick,<->] (dram) -- (virt) ;
+\end{tikzpicture}
+#+END_CENTER
+
+*** A Basic Cache
+
+Demands on cache implementation:
+
+- Fast, small, cheap, low power
+- Fine-grained
+- High "hit"-rate (few "misses")
+
+#+ATTR_LATEX: :height 0.3\textheight
+[[./media/basic-cache.pdf]]
+
+Design Goals: at odds with each other. Why?
+
+#+LATEX:\begin{hidden}
+*Address matching logic expensive*
+#+LATEX:\end{hidden}
+
+\medskip
+[Wikipedia \cc]
+
+*** Caches: Engineering Trade-Offs
+
+Engineering Decisions:
+
+- More data per unit of access matching logic
+
+  $\rightarrow$ Larger ``Cache Lines''
+
+- Simpler/less access matching logic\\
+
+  $\rightarrow$ Less than full ``Associativity''
+
+- Eviction strategy
+- Size
+
+*** Associativity
+
+**** Direct Mapped                                                 :B_column:
+    :PROPERTIES:
+    :BEAMER_col: 0.5
+    :END:
+Direct Mapped:
+
+\bigskip
+\begin{tikzpicture}[yscale=-0.4,xscale=0.7,font=\small]
+
+    \draw [thick] (0,0) rectangle +(2,-1)
+    node [pos=0.5,text depth=0.4ex] {Memory};
+    \foreach\i in {0,1,2,...,6}
+    {
+    \draw [thick] (0,\i) rectangle +(2,1) node [pos=0.5] {\i};
+    \pgfmathtruncatemacro{\tgt}{mod(\i,4)}
+    \draw [-stealth,thick] (2,\i+0.5) -- (4,\tgt+0.5) ;
+    }
+    \node at (1,7.5) { $\vdots$ };
+
+    \draw [thick] (4,0) rectangle +(2,-1)
+    node [pos=0.5,text depth=0.4ex] {Cache};
+    \foreach\i in {0,1,2,...,3}
+    \draw [thick] (4,\i) rectangle +(2,1) node [pos=0.5] {\i};
+
+\end{tikzpicture}
+
+**** 2-way set associative                                         :B_column:
+    :PROPERTIES:
+    :BEAMER_col: 0.5
+    :END:
+2-way set associative:
+
+\bigskip
+\begin{tikzpicture}[yscale=-0.4,xscale=0.7,font=\small]
+    \draw [thick] (0,0) rectangle +(2,-1)
+    node [pos=0.5,text depth=0.4ex] {Memory};
+    \foreach\i in {0,1,2,...,6}
+    {
+      \draw [thick] (0,\i) rectangle +(2,1) node [pos=0.5] {\i};
+      \pgfmathtruncatemacro{\tgt}{mod(2*\i,4)}
+      \draw [-stealth,thick] (2,\i+0.5) -- (4,\tgt+0.5) ;
+      \pgfmathtruncatemacro{\tgt}{mod(2*\i+1,4)}
+      \draw [-stealth,thick] (2,\i+0.5) -- (4,\tgt+0.5) ;
+    }
+    \node at (1,7.5) { $\vdots$ };
+
+    \draw [thick] (4,0) rectangle +(2,-1)
+    node [pos=0.5,text depth=0.4ex] {Cache};
+    \foreach\i in {0,1,2,...,3}
+    \draw [thick] (4,\i) rectangle +(2,1) node [pos=0.5] {\i};
+
+\end{tikzpicture}
+
+*** Size/Associativity vs Hit Rate
+
+#+ATTR_LATEX: :height 0.7\textheight
+[[./media/cache-assoc-miss.pdf]]
+
+Miss rate versus cache size on the Integer portion of
+SPEC CPU2000 [Cantin, Hill 2003]
+
+*** Demo: Learning about Caches
+
+#+LATEX: \demo{intro/Cache Organization on Your Machine}
+
+*** Experiments: 1. Strides: Setup
+
+\footnotesize
+#+INCLUDE: "media/microbench/strides.c" src c
+
+\normalsize
+What do you expect? [[[http://igoro.com/archive/gallery-of-processor-cache-effects/][Ostrovsky `10]]]
+
+*** Experiments: 1. Strides: Results
+#+ATTR_LATEX: :height 0.7\textheight
+[[./media/microbench/strides-crop.pdf]]
+
+*** Experiments: 2. Bandwidth: Setup
+
+\scriptsize
+#+INCLUDE: "media/microbench/bw.c" src c
+
+\normalsize
+What do you expect? [[[http://igoro.com/archive/gallery-of-processor-cache-effects/][Ostrovsky `10]]]
+
+*** Experiments: 2. Bandwidth: Results
+
+#+ATTR_LATEX: :height 0.7\textheight
+[[./media/microbench/bw-crop.pdf]]
+
+*** Experiments: 3. A Mystery: Setup
+
+\footnotesize
+#+INCLUDE: "media/microbench/assoc.c" src c
+
+\normalsize
+What do you expect? [[[http://igoro.com/archive/gallery-of-processor-cache-effects/][Ostrovsky `10]]]
+
+*** Experiments: 3. A Mystery: Results
+
+#+ATTR_LATEX: :height 0.6\textheight
+[[./media/microbench/assoc-crop.pdf]]
+
+Color represents achieved bandwith:
+- Red: high
+- Blue: low
+
+*** Thinking about the Memory Hierarchy
+
+- What is a *working set*?
+- What is *data locality* of an algorithm?
+- What does this have to with caches?
+
+*** Case Study: Streaming Workloads
+
+Q: Estimate epxected throughput for =saxpy= on an architecture with caches.
+What are the right units?
+\[
+  z_i = \alpha x_i + y_i\quad(i=1,\dots,n)
+\]
+
+#+LATEX: \begin{hidden}[5cm]
+- Units: GBytes/s
+- Net memory accessed: $n\times 4 \times 3$ bytes
+- Actual memory accessed: $n\times 4 \times 4$ bytes
+
+  (To read $z$ read into the cache before modification)
+#+LATEX: \end{hidden}
+
+Demo: [[https://github.com/lcw/stream_ispc]]
+
+*** Special Store Instructions
+
+At least two aspects to keep apart:
+
+#+LATEX: \begin{hidden}
+- Temporal Locality: Are we likely to refer to this data again soon?
+  (/non-temporal/ store)
+
+- Spatial Locality: Will (e.g.) the entire cache line be overwritten?
+  (/streaming/ store)
+#+LATEX: \end{hidden}
+
+What hardware behavior might result from these aspects?
+
+#+LATEX: \begin{hidden}
+- Non-temporal: Write past cache entirely (/invalidate), or evict soon
+- Spatial: Do not fetch cache line before overwriting
+#+LATEX: \end{hidden}
+
+- Comment on what a compiler can promise on these aspects.
+- Might these 'flags' apply to loads/prefetches?
+
+(see also: [[[http://sites.utexas.edu/jdm4372/2018/01/01/notes-on-non-temporal-aka-streaming-stores/][McCalpin `18]]])
+
+*** Case study: Matrix-Matrix Mult. ('MMM'): Code Structure
+
+- How would you structure a high-performance MMM?
+- What are sources of concurrency?
+- What should you consider your working set?
+
+**** MMM Figure
+     :PROPERTIES:
+     :BEAMER_col: 0.4
+     :END:
+\begin{tikzpicture}
+\draw (0,0) coordinate (A) rectangle ++(2,2) node [pos=0.3] {$A$};
+\draw (2,2) coordinate (B) rectangle ++(2,2) node [pos=0.3] {$B$};
+\draw (2,0) coordinate (C) rectangle ++(2,2) node [pos=0.3] {$A\cdot B$};
+\ifshowhidden
+\draw [dashed] (0,1) -- ++(4,0);
+\draw [dashed] (B) ++(1,2) -- ++(0,-4);
+\draw [dashed] (A) ++(1,0) -- ++(0,2);
+\draw [dashed] (B) ++(0,1) -- ++(2,0);
+\fi
+\end{tikzpicture}
+
+**** Answers                                                       :B_column:
+     :PROPERTIES:
+     :BEAMER_col: 0.6
+     :END:
+
+#+LATEX: \begin{hidden}[5cm]
+- Sources of concurrency: row, column loop, summation loop (?)
+- Working set: artificially created blocks
+- Provide enough concurrency: SIMD, ILP, Core
+#+LATEX: \end{hidden}
+
+*** Case study: Matrix-Matrix Mult. ('MMM') via Latency
+
+Come up with a simple cost model for MMM in a two-level hierarchy based
+on latency:
+
+#+LATEX: \begin{hidden}[6cm]
+\vspace*{-7.5mm}
+\begin{multline*}
+  \text{Avg latency per access} = \\
+    (1-\text{Miss ratio}) \cdot \text{Cache Latency}\\
+   + \text{Miss ratio} \cdot \text{Mem Latency}
+\end{multline*}
+
+\vspace*{-2ex}
+Assume: Working set fits in cache, No conflict misses
+
+Calculation:
+- Total accesses: $4 N_B^3$ ($N_B$: block size)
+- Misses: $3 N_B^2$
+- Miss rate:
+  \begin{equation*}
+    \frac{3}{4 N_B \cdot \text{cache line size}}
+  \end{equation*}
+
+#+LATEX: \end{hidden}
+
+[[[https://doi.org/10.1145/1248377.1248394][Yotov et al. '07]]]
+
+*** Case study: Matrix-Matrix Mult. ('MMM') via Bandwidth
+
+Come up with a cost model for MMM in a two-level hierarchy based
+on bandwidth:
+
+#+LATEX: \begin{hidden}[6cm]
+- FMA throughput: $16 \times 2$ SP FMAs per clock (e.g.)
+
+- Cycle count: $2N^3 / (2\cdot 32)=N^3/32$
+- Required cache bandwidth: $\text{(words accessed)}/\text{(cycles)}=4N^3 / (N^3/32)= 128$ floats/cycle (GB/s?)
+- Total mem. data motion: $\text{\# blocks} \cdot 4 \cdot \text{(block size)} = (N/N_B)^3 \cdot 4 N_B^2 =4N^3/N_B$
+- Required mem. bandwidth: $\text{(Mem.motion)}/\text{(cycles)}=4N^3 /N_B / (N^3/32)= 128/N_B$ floats/cycle (GB/s?)
+- What size cache do we need to get to feasible memory bandwidth?
+#+LATEX: \end{hidden}
+
+[[[https://doi.org/10.1145/1248377.1248394][Yotov et al. '07]]]
+
+*** Case study: Matrix-Matrix Mult. ('MMM'): Discussion
+
+*Discussion:* What are the main simplifications in each model?
+#+LATEX: \begin{hidden}[4cm]
+Bandwidth:
+- Miss assumptions
+- Multiple cache levels
+- Latency effects
+
+Latency:
+- Miss assumptions
+- Concurrency/parallelism of memory accesses
+- (HW) prefetching
+- Machine Limits
+#+LATEX: \end{hidden}
+
+[[[https://doi.org/10.1145/1248377.1248394][Yotov et al. '07]]]
+
+\medskip
+*General Q:* How can we analyze cache cost of algorithms in general?
+
+*** Hong/Kung: Red/Blue Pebble Game
+Simple means of I/O cost analysis: "Red/blue pebble game"
+
+- A way to quantify I/O cost on a DAG (why a DAG?)
+- "Red Hot" pebbles: data that can be computed on
+- "Blue Cool" pebbles: data that is stored, but not available for computation
+  without I/O
+
+*Note:* Can allow "Red/Purple/Blue/Black": more levels
+
+\medskip
+Q: What are the cost metrics in this model?
+
+#+LATEX: \begin{hidden}
+- I/O Cost: Turn a red into a blue pebble and vice versa
+- Number of red pebbles (corresponding to size of 'near' storage)
+#+LATEX: \end{hidden}
+
+[[[https://doi.org/10.1145/800076.802486][Hong/Kung `81]]]
+
+*** Cache-Oblivious Algorithms
+
+*Annoying chore:* Have to pick multiple machine-adapted block sizes in
+cache-adapted algorithms, one for each level in the memory hierarchy,
+starting with registers.
+
+*Idea:*
+- Step 1: Express algorithm recursively in divide & conquer manner
+- Step 2: Pick a strategy to decrease block size
+
+  Give examples of block size strategies, e.g. for MMM:
+#+LATEX: \begin{hidden}
+  - All dimensions
+  - Largest dimension
+#+LATEX: \end{hidden}
+
+*Result:*
+- Asymptotically optimal on Hong/Kung metric
+
+*** Cache-Oblivious Algorithms: Issues
+
+What are potential issues on actual hardware?
+#+LATEX: \begin{hidden}[5cm]
+- In pure form:
+  - Function call overhead
+  - Register allocation
+- With good base case:
+  - I-cache overflow
+  - Instruction scheduling
+#+LATEX: \end{hidden}
+
+[[[https://doi.org/10.1145/1248377.1248394][Yotov et al. '07]]]
+
+*** Recall: Big-O Notation
+
+Classical Analysis of Algorithms (e.g.):
+\[
+  \text{Cost}(n) = O(n^3).
+\]
+Precise meaning? Anything missing from that statement?
+#+LATEX: \begin{hidden}[3cm]
+*Missing:* `as $n\to\infty$'
+
+\medskip
+There exists a $C$ and an $N_0$ independent of $n$ so that for all $n\ge N_0$,
+\[
+  \text{Cost}(n)\le C \cdot n^3.
+\]
+#+LATEX: \end{hidden}
+
+*** Comment: "Asymptotically Optimal"
+
+Comments on asymptotic statements about cost in relation to high performance?
+
+- No statement about finite $n$
+- No statement about the constant
+
+*Net effect:* Having an understanding of asymptotic cost is
+/necessary/, but /not sufficient/ for high performance.
+
+\medskip
+HPC is in the business of minimizing $C$ in:
+\[
+  \text{Cost}(n) \le C \cdot n^3\quad (\text{for all }n)
+\]
+
+*** Alignment
+
+/Alignment/ describes the process of matching the base address of:
+
+- Single word: =double=, =float=
+- SIMD vector
+- Larger structure
+
+To machine granularities:
+
+#+LATEX: \begin{hidden}
+- Natural word size
+- Vector size
+- Cache line
+#+LATEX: \end{hidden}
+
+Q: What is the performance impact of misalignment?
+
+*** Performance Impact of Misalignment
+
+#+BEGIN_CENTER
+
+\begin{tikzpicture}[
+explanation/.style={right,inner xsep=0,text width=10cm}
+]
+\foreach\addr in {0,1,...,34}
+    \draw [fill=orange]
+    (0.25*\addr,0) coordinate (c\addr)
+    rectangle +(0.25,0.25)
+    coordinate [pos=0.5] (a\addr) ;
+\draw (0.25*35,0) rectangle +(0.75,0.25)
+    node [pos=0.5] { $\cdots$ };
+
+\foreach\addr in {0,16,32}
+    \draw [ultra thick] (c\addr) -- +(0,0.25);
+
+\draw [snake=brace,thick,red] ($(c0) + (0,0.35)$) -- ($(c16) +(0,0.35)$)
+    node [pos=0.5,above] {Matched structure};
+
+\coordinate (expl) at (0,-2.5) ;
+
+\begin{scope}[xshift=0cm,yshift=-1.5cm]
+\foreach\thread in {0,1,...,15}
+    \draw [fill=gray!30] (0.25*\thread,0) rectangle +(0.25,0.25)
+    coordinate [pos=0.5] (t\thread) ;
+\end{scope}
+
+\foreach\i in {0,1,...,15}
+\draw [thick,->] (t\i) -- (a\i) ;
+\end{tikzpicture}
+
+
+\bigskip
+\begin{tikzpicture}[
+explanation/.style={right,inner xsep=0,text width=10cm}
+]
+
+\foreach\addr in {0,1,...,34}
+    \draw [fill=orange]
+    (0.25*\addr,0) coordinate (c\addr)
+    rectangle +(0.25,0.25)
+    coordinate [pos=0.5] (a\addr) ;
+\draw (0.25*35,0) rectangle +(0.75,0.25)
+    node [pos=0.5] { $\cdots$ };
+
+\foreach\addr in {0,16,32}
+    \draw [ultra thick] (c\addr) -- +(0,0.25);
+
+\draw [snake=brace,thick,red] ($(c0) + (0,0.35)$) -- ($(c16) +(0,0.35)$)
+    node [pos=0.5,above] {Matched structure};
+
+\coordinate (expl) at (0,-2.5) ;
+
+\begin{scope}[xshift=0cm,yshift=-1.5cm]
+\foreach\thread in {0,1,...,15}
+    \draw [fill=gray!30] (0.25*\thread,0) rectangle +(0.25,0.25)
+    coordinate [pos=0.5] (t\thread) ;
+\end{scope}
+
+%    \foreach\i in {0,1,...,15}
+%    {
+%    \pgfmathtruncatemacro{\addr}{5+\i}
+%    \draw [thick,->] (t\i) -- (a\addr) ;
+%    }
+
+    \foreach\i in {0,1,...,10}
+    {
+    \pgfmathtruncatemacro{\addr}{5+\i}
+    \draw [thick,->] (t\i) -- (a\addr) ;
+    }
+    \foreach\i in {11,12,...,15}
+    {
+    \pgfmathtruncatemacro{\addr}{5+\i}
+    \draw [thick,->,opacity=.1] (t\i) -- (a\addr) ;
+    }
+%     \foreach\i in {0,1,...,10}
+%     {
+%     \pgfmathtruncatemacro{\addr}{5+\i}
+%     \draw [thick,->,opacity=.1] (t\i) -- (a\addr) ;
+%     }
+%     \foreach\i in {11,12,...,15}
+%     {
+%     \pgfmathtruncatemacro{\addr}{5+\i}
+%     \draw [thick,->] (t\i) -- (a\addr) ;
+%     }
+
+\end{tikzpicture}
+
+#+END_CENTER
+
+*** SIMD: Basic Idea
+
+What's the basic idea behind SIMD?
+#+LATEX: \begin{hidden}
+\begin{tikzpicture}
+\foreach\addr in {0,1,...,3}
+    \draw [fill=orange]
+    (0.25*\addr,0) coordinate (a\addr)
+    rectangle +(0.25,0.25);
+
+\foreach\addr in {0,1,...,3}
+    \draw [fill=orange]
+    (0.25*\addr,-0.5) coordinate (b\addr)
+    rectangle +(0.25,0.25);
+
+\node [left=5mm of b0,yshift=.75ex] {$+$};
+
+\foreach\addr in {0,1,...,3}
+    \draw [fill=orange]
+    (0.25*\addr,-1) coordinate (c\addr)
+    rectangle +(0.25,0.25);
+
+\node [left=5mm of c0,yshift=.75ex] {$=$};
+
+\end{tikzpicture}
+#+LATEX: \end{hidden}
+
+What architectural need does it satisfy?
+#+LATEX: \begin{hidden}
+- Insufficient instruction decode/dispatch bandwidth
+- Tack more operations onto one decoded instruction
+#+LATEX: \end{hidden}
+
+Typically characterized by width of data path:
+
+- SSE: 128 bit (4 floats, 2 doubles)
+- AVX-2: 256 bit (8 floats, 4 doubles)
+- AVX-512: 512 bit (16 floats, 8 doubles)
+
+*** SIMD: Architectural Issues
+
+Realization of inter-lane comm. in SIMD?
+Find instructions.
+#+LATEX: \begin{hidden}
+- Misaligned stores/loads? (no)
+- Broadcast, Unpack+Interleave, Shuffle, Permute
+- Reductions ("horizontal")
+#+LATEX: \end{hidden}
+
+Name tricky/slow aspects in terms of expressing SIMD:
+#+LATEX: \begin{hidden}
+- Divergent control flow
+  - Masking
+  - Reconvergence
+- Indirect adressing: gather/scatter
+#+LATEX: \end{hidden}
+
+x86 SIMD suffixes: What does the "=ps=" suffix mean? "=sd="?
+#+LATEX: \begin{hidden}
+- =ps=: Packed single precision
+- =sd=: Scalar double precision
+#+LATEX: \end{hidden}
+
+*** SIMD: Transposes
+
+Why are transposes important? Where do they occur?
+#+LATEX: \begin{hidden}
+- Whenever SIMD encounters a mismatched data layout
+- For example: MMM of two row-major matrices
+#+LATEX: \end{hidden}
+
+Example implementation aspects:
+- HPTT: [[[https://github.com/springer13/hptt][Springer et al. `17]]]
+- github: springer13/hptt [[https://github.com/springer13/hptt/blob/e1017ef8b8ed0b6f3bb3b70df825a87f94c643e8/src/transpose.cpp#L137][8x8 transpose microkernel]]
+- Q: Why 8x8?
+
+** Shared-Memory Multiprocessors
+*** Multiple Cores vs Bandwidth
+
+Assume (roughly right for Intel):
+
+- memory latency of 100 ns
+- peak DRAM bandwidth of 50 GB/s (per socket)
+
+How many cache lines should be/are in flight at one time?
+
+#+LATEX: \begin{hidden}[3cm]
+- $100 \text{ns} \cdot 50 \text{GB}/s=5000 \text{bytes}$
+- About 80 cache lines
+- Oops: Intel hardware can only handle about 10 pending requests per core at one time
+- $10\cdot 64 /100 \text{ns} \approx 6.4 \text{GB}/s$
+#+LATEX: \end{hidden}
+
+[[[http://sites.utexas.edu/jdm4372/2018/01/01/notes-on-non-temporal-aka-streaming-stores/][McCalpin `18]]]
+
+*** Topology and NUMA
+
+#+ATTR_LATEX: :height 0.6\textheight
+[[./media/supermicro-board.pdf]]
+
+[SuperMicro Inc. `15]
+
+*Demo:* Show =lstopo= on porter, from [[https://github.com/open-mpi/hwloc][hwloc]].
+
+*** Placement and Pinning
+
+Who decides on what core my code runs? How?
+#+LATEX: \begin{hidden}[3cm]
+- The OS scheduler: "Oh, hey, look! A free core!"
+- You, explicitly, by *pinning*:
+  - ~OMP_PLACES=cores~
+  - ~pthread_setaffinity_np()~
+#+LATEX: \end{hidden}
+Who decides on what NUMA node memory is allocated?
+#+LATEX: \begin{hidden}
+- =malloc= uses 'first touch'
+- /You/ can decide explicitly (through =libnuma=)
+#+LATEX: \end{hidden}
+\demo{intro/NUMA and Bandwidths}
+
+What is the main expense in NUMA?
+
+\medskip
+#+LATEX: \begin{hidden}
+Latency (but it impacts bandwidth by way of queuing)
+#+LATEX: \end{hidden}
+
+*** Cache Coherence
+
+What is /cache coherence/?
+#+LATEX: \begin{hidden}[2cm]
+- As soon as you make a copy of (cache) something, you risk inconsistency with the original
+- A set of guarantees on how (and in what order) changes to memory become visible to other cores
+#+LATEX: \end{hidden}
+
+How is cache coherence implemented?
+#+LATEX: \begin{hidden}[2cm]
+- Snooping
+- Protocols, operating on cache line states (e.g. "[[https://en.wikipedia.org/wiki/MESI_protocol][MESI]]")
+#+LATEX: \end{hidden}
+
+What are the performance impacts?
+
+- \demo{intro/Threads vs Cache}
+- \demo{intro/Lock Contention}
+
+*** 'Conventional' vs Atomic Memory Update
+
+\begin{center}
+\begin{tikzpicture}[
+start chain=going right,
+node distance=1cm,
+op/.style={draw,thick,fill=blue!50,on chain},
+every join/.style={},
+]
+\node [op] (read) {Read} ;
+\node [op] (inc) {Increment} ;
+\node [op] (write) {Write} ;
+\draw [thick,->] (read) -- (inc) coordinate [pos=0.5] (r-i);
+\draw [thick,->] (inc) -- (write) coordinate [pos=0.5] (i-w);
+%\uncover<+->{
+{
+    \node at (r-i) [arrow box,fill=yellow,
+    arrow box arrows={north:0.5cm},below,draw,thick]
+    {Interruptible!} ;
+}
+%\uncover<+->{
+{
+    \node at (i-w) [arrow box,fill=yellow,
+    arrow box arrows={north:0.5cm},below,draw,thick]
+    {Interruptible!} ;
+}
+\end{tikzpicture}
+\end{center}
+
+\begin{center}
+\begin{tikzpicture}[
+start chain=going right,
+node distance=1cm,
+op/.style={draw,thick,fill=blue!50,on chain},
+every join/.style={},
+]
+\node [op] (read) {Read} ;
+\node [op] (inc) {Increment} ;
+\node [op] (write) {Write} ;
+\draw [thick,->] (read) -- (inc) coordinate [pos=0.5] (r-i);
+\draw [thick,->] (inc) -- (write) coordinate [pos=0.5] (i-w);
+\begin{pgfonlayer}{background}
+    \node [fit=(read) (write), fill=blue!30,draw,thick] { } ;
+\end{pgfonlayer}{background}
+%\uncover<+->{
+{
+    \node at (r-i) [arrow box,fill=green!75,
+    arrow box arrows={north:0.5cm},below=0.3cm,draw,thick]
+    {Protected} ;
+}
+%\uncover<+->{
+{
+    \node at (i-w) [arrow box,fill=green!75,
+    arrow box arrows={north:0.5cm},below=0.3cm,draw,thick]
+    {Protected} ;
+}
+\end{tikzpicture}
+\end{center}
+
+* Machine Abstractions
+  :PROPERTIES:
+  :RELATE_TREE_SECTION_NAME: machabstr
+  :RELATE_TREE_SECTION_OPENED: true
+  :END:
+** C
+*** Atomic Operations: Compare-and-Swap
+#+BEGIN_SRC c
+#include <stdatomic.h>
+_Bool atomic_compare_exchange_strong(
+      volatile A* obj,
+      C* expected, C desired );
+#+END_SRC
+
+What does =volatile= mean?
+#+LATEX: \begin{hidden}
+Memory may change at any time, do not keep in register.
+#+LATEX: \end{hidden}
+
+What does this do?
+#+LATEX: \begin{hidden}
+- Store ~(*obj == *expected) ? desired : *obj~ into ~*obj~.
+- Return =true= iff memory contents was as =expected=.
+#+LATEX: \end{hidden}
+
+How might you use this to implement atomic FP multiplication?
+#+LATEX: \begin{hidden}
+Read previous, perform operation, try CAS, maybe retry
+#+LATEX: \end{hidden}
+
+*** Memory Ordering
+
+Why is Memory Ordering a Problem?
+#+LATEX: \begin{hidden}
+- Out-of-order CPUs reorder memory operations
+- Compilers reorder memory operations
+#+LATEX: \end{hidden}
+
+What are the different memory orders and what do they mean?
+
+#+LATEX: \begin{hidden}[4cm]
+- Atomicity itself is unaffected
+- Makes sure that 'and then' is meaningful
+
+Types:
+- Sequentially consistent: no reordering
+- Acquire: later loads may not reorder across
+- Release: earlier writes may not reorder across
+- Relaxed: reordering OK
+#+LATEX: \end{hidden}
+
+*** Example: A Semaphore With Atomics
+
+\small
+\ifshowhidden
+#+BEGIN_SRC c
+#include <stdatomic.h> // mo_->memory_order, a_->atomic
+typedef struct { atomic_int v;} naive_sem_t;
+void sem_down(naive_sem_t *s)
+{
+  while (1) {
+    while (a_load_explicit(&(s->v), mo_acquire) < 1)
+        spinloop_body();
+    int tmp=a_fetch_add_explicit(&(s->v), -1, mo_acq_rel);
+    if (tmp >= 1)
+        break; // we got the lock
+    else // undo our attempt
+      a_fetch_add_explicit(&(s->v), 1, mo_relaxed);
+  }
+}
+void sem_up(naive_s_t *s) {
+  a_fetch_add_explicit(&(s->v), 1, mo_release);
+}
+#+END_SRC
+\else
+#+BEGIN_SRC c
+#include <stdatomic.h> // mo_->memory_order, a_->atomic
+typedef struct { atomic_int v;} naive_sem_t;
+void sem_down(naive_sem_t *s)
+{
+  while (1) {
+    while (a_load_explicit(&(s->v), mo_______) < 1)
+        spinloop_body();
+    int tmp=a_fetch_add_explicit(&(s->v), -1, mo________rel);
+    if (tmp >= 1)
+        break; // we got the lock
+    else // undo our attempt
+      a_fetch_add_explicit(&(s->v), 1, mo_______);
+  }
+}
+void sem_up(naive_s_t *s) {
+  a_fetch_add_explicit(&(s->v), 1, mo_______);
+}
+#+END_SRC
+\fi
+
+[[[https://stackoverflow.com/a/36097001][Cordes `16]]] --- Hardware implementation: how?
+
+*** C: What is 'order'?
+
+[[http://www.open-std.org/jtc1/sc22/wg14/www/docs/n1548.pdf#page=32][C11 Committee Draft, December `10, Sec. 5.1.2.3, "Program execution"]]:
+
+\small
+- (3) /Sequenced before/ is an asymmetric, transitive, pair-wise relation between evaluations
+  executed by a single thread, which induces a partial order among those evaluations.
+  Given any two evaluations A and B, if A is sequenced before B, then the execution of A
+  shall precede the execution of B. (Conversely, if A is sequenced before B, then B is
+  sequenced after A.) If A is not sequenced before or after B, then A and B are
+  unsequenced. Evaluations A and B are /indeterminately sequenced/ when A is sequenced
+  either before or after B, but it is unspecified which. The presence of a sequence point
+  between the evaluation of expressions A and B implies that every value computation and
+  side effect associated with A is sequenced before every value computation and side effect
+  associated with B. (A summary of the /sequence points/ is given in annex C.)
+\normalsize
+
+Q: Where is this definition used (in the standard document)?
+#+LATEX: \begin{hidden}
+In defining the semantics of atomic operations.
+#+LATEX: \end{hidden}
+
+*** C: What is 'order'? (Encore)
+
+[[http://www.open-std.org/jtc1/sc22/wg14/www/docs/n1548.pdf#page=32][C11 Draft, 5.1.2.4 "Multi-threaded executions and data races"]]:
+
+- All modifications to a particular atomic object M occur in some particular total order,
+  called the /modification order/ of M.
+- An evaluation A /carries a dependency/ to an evaluation B if ...
+- An evaluation A is /dependency-ordered/ before an evaluation B if...
+- An evaluation A /inter-thread happens before/ an evaluation B if...
+- An evaluation A /happens before/ an evaluation B if...
+
+Why is this so subtle?
+#+LATEX: \begin{hidden}
+- Many common optimizations depend on the ability to reorder operations.
+- Two options:
+  1. Lose the ability to do those optimizations
+  1. Specify precisely how much of the order should be externally observable
+#+LATEX: \end{hidden}
+
+*** C: How Much Lying is OK?
+
+[[http://www.open-std.org/jtc1/sc22/wg14/www/docs/n1548.pdf#page=32][C11 Committee Draft, December `10, Sec. 5.1.2.3, "Program execution"]]:
+
+-   (1) The semantic descriptions in this International Standard describe the behavior of an
+    abstract machine in which issues of optimization are irrelevant.
+
+-   (2) Accessing a volatile object, modifying an object, modifying a file, or calling a function
+    that does any of those operations are all /side effects/, which are changes in the state of
+    the execution environment. [...]
+
+*** C: How Much Lying is OK?
+
+-   (4) In the abstract machine, all expressions are evaluated as specified by the semantics. An
+    actual implementation need not evaluate part of an expression if it can deduce that its
+    value is not used and that no needed side effects are produced (including any caused by
+    calling a function or accessing a volatile object).
+
+-   (6) The least requirements on a conforming implementation are:
+    -    Accesses to volatile objects are evaluated strictly according to the rules of the abstract machine.
+    -   At program termination, all data written into files shall be identical to the result that
+      execution of the program according to the abstract semantics would have produced.
+    -   The input and output dynamics of interactive devices shall take place as specified in
+      7.21.3. The intent of these requirements is that unbuffered or line-buffered output
+      appear as soon as possible, to ensure that prompting messages actually appear prior to
+      a program waiting for input.
+    This is the observable behavior of the program.
+
+*** Arrays
+
+Why are *arrays* the dominant data structure in high-performance code?
+#+LATEX: \begin{hidden}[3cm]
+- Performance is mostly achieved with /regular/, /structured/ code (e.g. SIMD, rectangular loops)
+- Arrays are a natural fit for that type of code
+- Abstractions of linear algebra map directly onto arrays
+#+LATEX: \end{hidden}
+
+Any comments on C's arrays?
+#+LATEX: \begin{hidden}
+- 1D arrays: fine, no surprises
+- \(n\)D arrays: basically useless: sizes baked into types
+  - Interestinglly: Fortran is (incrementally) smarter
+#+LATEX: \end{hidden}
+
+
+*** Arrays vs Abstraction
+Arrays-of-Structures or Structures-of-Arrays? What's the difference? Give an example.
+
+#+LATEX: \begin{hidden}[3cm]
+- Example: Array of XYZ coordinates:
+  - XYZXYZXYZ...
+  - XXX....YYY...ZZZ...
+- Which of these will be suitable for SIMD? (e.g. computing a norm?)
+- Structures-of-Arrays if at all possible -- to expose regularity
+#+LATEX: \end{hidden}
+
+Language aspects of the distinction? Salient example?
+#+LATEX: \begin{hidden}[2cm]
+- C ~struct~ forces you into arrays-of-structures
+  - AoS: more "conceptually sound"
+  - SoA: better for performance
+- Complex numbers
+#+LATEX: \end{hidden}
+
+*** C and Multi-Dimensional Arrays: A Saving Grace
+#+BEGIN_SRC c
+// YES:
+void f(int m, int n, double (*)[m][n]);
+
+// NO:
+struct ary {
+  int m;
+  int n;
+  double (*array)[m][n];
+};
+
+// YES:
+struct ary {
+  int m;
+  int n;
+  double a[];
+};
+#+END_SRC
+
+*** SIMD
+
+Name language mechanisms for SIMD:
+
+#+LATEX: \begin{hidden}[3cm]
+- Inline Assembly
+- Intrinsics
+- Vector Types
+  =typedef int v4si __attribute__ ((vector_size (16)));=
+- =#pragma simd=
+- Merging of scalar program instances (in hw/sw)
+#+LATEX: \end{hidden}
+
+\demo{machabstr/Ways to SIMD}
+
+*** Outer-Loop/inner-Loop Vectorization
+
+Contrast /outer-loop/ vs /inner-loop vectorization/.
+#+LATEX: \begin{hidden}
+- Inner-loop: Inner-most loop vectorized
+- Outer loop: Vectorize a whole kernel. Requires:
+  - Changed memory layout
+  - Must be able to express /all/ control flow
+#+LATEX: \end{hidden}
+
+*Side q:* Would you consider GPUs outer- or inner-loop-vectorizing?
+
+*** Alignment: How?
+The old way:
+#+BEGIN_SRC c
+int __attribute__ ((aligned (8))) a_int;
+#+END_SRC
+
+Difference between these two?
+#+BEGIN_SRC c
+int __attribute__ ((aligned (8))) * ptr_t_1;
+int *__attribute__ ((aligned (8))) ptr_t_2;
+#+END_SRC
+
+The 'new' way (C/C++11):
+#+BEGIN_SRC c++
+struct alignas(64) somestruct_t { /* ... */ };
+struct alignas(alignof(other_t))
+  somestruct_t { /* ... */ };
+struct
+  alignas(
+    std::hardware_destructive_interference_size)
+    somestruct_t { /* ... */ };
+#+END_SRC
+What is /constructive interference/?
+
+*** Alignment: Why?
+
+What is the concrete impact of the constructs on the previous slide?
+#+LATEX: \begin{hidden}[4cm]
+- Compiler needs to /know/ whether data is aligned
+  - Generate the correct instructions (which encode alignment promises)
+  - Stack-allocate memory of the correct alignment
+- Heap-allocated memory needs to actually satisfy the alignment promise!
+  - =posix_memalign=
+  - Hack it by overallocating
+  - In =numpy=: overallocate in bytes, get base address, offset, obtain view
+#+LATEX: \end{hidden}
+
+*** Pointers and Aliasing
+
+\demo{machabstr/Pointer Aliasing}
+
+*** Register Pressure
+
+What if the register working set gets larger than the registers can hold?
+What is the performance impact?
+#+LATEX: \begin{hidden}
+- "Register Spill": save/reload code being generated
+- CPU: L1 is relatively fast
+- Other architectures: can be quite dramatic
+#+LATEX: \end{hidden}
+
+\demo{machabstr/Register Pressure}
+
+*** Object-Oriented Programming
+
+Object-oriented programming: The weapon of choice for encapsulation and separation of concerns!
+
+Performance perspective on OOP?
+#+LATEX: \begin{hidden}
+- Fine-grain OOP leads to an AoS disaster
+- Long expressions create many temporaries
+  - Memory traffic
+- Return values
+- Run-time polymorphism (=virtual= methods) lead to fine-grain flow control
+
+*Summary:* No good, very bad. /Must/ have sufficient granularity to offset cost.
+#+LATEX: \end{hidden}
+
+#+LATEX: \demo{machabstr/Object Orientation vs Performance}
+
+*** Being Nice to Your Compiler
+
+Some rules of thumb:
+
+- Use indices rather than pointers
+- Extract common subexpressions
+- Make functions static
+- Use =const=
+- Avoid store-to-load dependencies
+
+What are the concrete impacts of doing these things?
+
+
+** OpenCL/CUDA
+
+*** Chip Real Estate
+
+#+ATTR_LATEX: :height 7cm
+[[./media/isaiah_dieshot.jpg]]
+
+/Die floorplan:/ VIA Isaiah (2008).
+
+65 nm, 4 SP ops at a time, 1 MiB L2.
+
+*** Kayvon macros                                           :B_ignoreheading:
+    :PROPERTIES:
+    :BEAMER_env: ignoreheading
+    :END:
+#+BEGIN_EXPORT latex
+\newcommand{\kayvoncredit}{
+  \begin{tikzpicture}[overlay]
+    \node [xshift=1cm,yshift=0.5cm]
+      at (current page.south west)
+      [anchor=south west]
+      {[Fatahalian `08] };
+  \end{tikzpicture}
+}
+\newcommand{\kayvoninc}[2]{
+    \begin{center}
+    \includegraphics[viewport=#2,clip=true,page=#1,height=0.7\textheight]{kayvon-gpuarch.pdf}
+    \end{center}
+}
+#+END_EXPORT
+*** ``CPU-style'' Cores
+\kayvoninc{13}{1in 1in 9in 6.5in }
+
+\kayvoncredit
+*** Slimming down
+
+\kayvoninc{14}{1in 1in 9in 6.5in }
+
+\kayvoncredit
+
+*** More Space: Double the Number of Cores
+
+\kayvoninc{15}{2.5in 1in 8.5in 6.5in }
+
+\kayvoncredit
+
+*** Even more
+
+# \kayvoninc{16}{4in 1in 9.5in 6.5in }
+\kayvoninc{17}{4in 1.35in 9.5in 6.5in }
+
+\kayvoncredit
+
+*** SIMD
+
+**** ALU cluster                                                   :B_column:
+     :PROPERTIES:
+     :BEAMER_col: 0.5
+     :END:
+
+#+BEGIN_EXPORT latex
+\only<1-2>{%
+\includegraphics[viewport=1.8in 3.8in 5.45in 6.25in,clip=true,page=19,width=\textwidth]{kayvon-gpuarch.pdf}\\[-0.5mm]
+\includegraphics[viewport=1.8in 1.35in 5.45in 3.8in,clip=true,page=19,width=\textwidth]{kayvon-gpuarch.pdf}
+}%
+\only<3>{%
+\includegraphics[viewport=1.8in 3.8in 5.45in 6.25in,clip=true,page=20,width=\textwidth]{kayvon-gpuarch.pdf}\\[-0.5mm]
+\includegraphics[viewport=1.8in 1.35in 5.45in 3.8in,clip=true,page=19,width=\textwidth]{kayvon-gpuarch.pdf}
+}%
+\only<4->{%
+\includegraphics[viewport=1.8in 3.8in 5.45in 6.25in,clip=true,page=20,width=\textwidth]{kayvon-gpuarch.pdf}\\[-0.5mm]
+\includegraphics[viewport=1.8in 1.35in 5.45in 3.8in,clip=true,page=20,width=\textwidth]{kayvon-gpuarch.pdf}
+}
+#+END_EXPORT
+
+**** SIMD Ideas                                                    :B_column:
+     :PROPERTIES:
+     :BEAMER_col: 0.5
+     :END:
+
+**Idea #2: SIMD**
+
+\medskip
+Amortize cost/complexity of managing an instruction
+stream across many ALUs
+
+\kayvoncredit
+
+*** SM macro                                                :B_ignoreheading:
+    :PROPERTIES:
+    :BEAMER_env: ignoreheading
+    :END:
+
+#+BEGIN_EXPORT latex
+\definecolor{fetch}{RGB}{227,110,35}
+\definecolor{alu}{RGB}{255,188,24}
+\definecolor{context}{RGB}{132,146,175}
+\tikzset{
+    blk/.style={draw,thick,text centered,anchor=south west,minimum width=2.5cm,text width=2cm,font=\small},
+}
+
+\def\simplesm{{
+  \node (fetch) [blk,fill=fetch] at (0,0) {Fetch/ Decode} ;
+  \begin{scope}[yshift=-1.25cm]
+  \foreach \x in {0,1,2,3}
+  \foreach \y in {1,0}
+  \draw [fill=alu,thick] (0.625*\x,0.5*\y) rectangle +(0.625,0.5);
+  \end{scope}
+  \node (pvt) [blk,fill=context, minimum height=2cm,below=1.5cm of fetch]
+  {Register File };
+  \node (shared) [blk,fill=context,minimum height=1cm,below=0.2cm of pvt]
+  {Scratchpad/L1 };
+}}
+#+END_EXPORT
+
+*** Latency Hiding
+
+**** Problem                                                       :B_column:
+     :PROPERTIES:
+     :BEAMER_col: 0.5
+     :END:
+
+- Latency (mem, pipe) hurts non-OOO cores
+- Do /something/ while waiting
+
+What is the unit in which work gets scheduled on a GPU?
+#+LATEX: \begin{hidden}
+A SIMD vector
+
+('warp' (Nvidia), 'Wavefront' (AMD))
+#+LATEX: \end{hidden}
+
+How can we keep busy?
+
+#+LATEX: \begin{hidden}
+- More vectors
+
+ (bigger group)
+- ILP
+#+LATEX: \end{hidden}
+
+Change in architectural picture?
+
+**** Architecture before                                           :B_column:
+     :PROPERTIES:
+     :BEAMER_col: 0.25
+     :END:
+
+Before:
+
+\medskip
+#+BEGIN_EXPORT latex
+\resizebox{5em}{!}{
+    \begin{tikzpicture}
+    \simplesm
+    \end{tikzpicture}
+}
+#+END_EXPORT
+
+**** Architecture after                                            :B_column:
+     :PROPERTIES:
+     :BEAMER_col: 0.25
+     :END:
+
+After:
+
+\medskip
+#+LATEX: \begin{hidden}
+#+BEGIN_EXPORT latex
+\resizebox{5em}{!}{
+  \begin{tikzpicture}
+    \node (fetch) [blk,fill=fetch] at (0,0) {Fetch/ Decode} ;
+    \begin{scope}[yshift=-1.25cm]
+    \foreach \x in {0,1,2,3}
+    \foreach \y in {1,0}
+    \draw [fill=alu,thick] (0.625*\x,0.5*\y) rectangle +(0.625,0.5);
+    \end{scope}
+    \foreach\i in {3,2,1,0}
+      \node (pvt\i) [blk,fill=context, minimum height=2cm,below=2cm of fetch,xshift=\i mm,yshift=\i mm]
+      {Register File };
+    \node (shared) [blk,fill=context,minimum height=3cm,below=0.2cm of pvt0]
+    {Scratchpad/L1 };
+  \end{tikzpicture}
+ }
+#+END_EXPORT
+
+More state space!
+#+LATEX: \end{hidden}
+
+*** GPUs: Core Architecture Ideas
+
+Three core ideas:
+#+LATEX: \begin{hidden}
+- Remove things that help with latency in single-thread
+- Massive core and SIMD parallelism
+- Cover latency with concurrency
+  - SMT
+  - ILP
+#+LATEX: \end{hidden}
+
+*** `SIMT'
+
+**** Grid Abstraction                                              :B_column:
+     :PROPERTIES:
+     :BEAMER_col: 0.7
+     :END:
+
+#+BEGIN_EXPORT latex
+\begin{tikzpicture}
+  \draw [thick,|->] (0,0.3) -- ++(3,0)
+    node [anchor=west,font=\small] { Axis 0 };
+  \draw [thick,|->] (-0.3,0) -- ++(0,-2)
+    node [anchor=east,font=\small,rotate=90] { Axis 1 };
+
+  \foreach \gi in {0,1,2,3}
+    \foreach \gj in {0,1,2}
+    {
+      \draw [very thick,fill=black!20] (\gi*1.75,\gj*-1.5) coordinate (g\gi\gj)
+        rectangle +(1.75,-1.5) ;
+      \foreach \li in {1,2,3,4,5,6}
+        \draw (g\gi\gj) ++(0.25*\li,0) -- +(0,-1.5) ;
+      \foreach \li in {1,2,3,4,5}
+        \draw (g\gi\gj) ++(0,-0.25*\li) -- +(1.75, 0) ;
+    }
+\end{tikzpicture}
+#+END_EXPORT
+
+**** Pile'o'cores
+     :PROPERTIES:
+     :BEAMER_col: 0.3
+     :END:
+
+#+BEGIN_EXPORT latex
+\begin{tikzpicture}
+    \foreach \i in {0,1,2}
+    \foreach \j in {0,1,2}
+    {
+      \node at (\i,-\j*1.75) (sm\i\j) {
+      \begin{tikzpicture}[transform canvas={scale=0.25}]
+          \simplesm
+      \end{tikzpicture}
+      };
+    }
+\end{tikzpicture}
+#+END_EXPORT
+
+*** Wrangling the Grid
+
+#+BEGIN_CENTER
+#+BEGIN_EXPORT latex
+\begin{tikzpicture}
+  \draw [thick,|->] (0,0.3) -- ++(3,0)
+  node [anchor=west,font=\small] { Axis 0 };
+  \draw [thick,|->] (-0.3,0) -- ++(0,-2)
+  node [anchor=east,font=\small,rotate=90] { Axis 1 };
+
+  \foreach \gi in {0,1,2,3}
+  \foreach \gj in {0,1,2}
+  {
+      \draw [very thick,fill=black!20] (\gi*1.75,\gj*-1.5) coordinate (g\gi\gj)
+      rectangle +(1.75,-1.5) ;
+      \foreach \li in {1,2,3,4,5,6}
+      \draw (g\gi\gj) ++(0.25*\li,0) -- +(0,-1.5) ;
+      \foreach \li in {1,2,3,4,5}
+      \draw (g\gi\gj) ++(0,-0.25*\li) -- +(1.75, 0) ;
+  }
+  \fill [black,opacity=0.3] (g31) ++(+1,-0.25) rectangle ++(0.25,-0.25)
+  coordinate [pos=0.5] (workitem2);
+  \node [draw,thick,fill=white,below=0.25 of
+  workitem2, arrow box, arrow box arrows={north:0.5cm},text width=0.85\textwidth] {
+      \begin{itemize}
+      \item \texttt{get\_local\_id(axis)?/size(axis)?}
+      \item \texttt{get\_group\_id(axis)?/num\_groups(axis)?}
+      \item \texttt{get\_global\_id(axis)?/size(axis)?}
+      \end{itemize}
+      \texttt{axis=0,1,2,\dots}
+  };
+  \end{tikzpicture}
+#+END_EXPORT
+#+END_CENTER
+
+*** Demo CL code
+
+#+LATEX: \demo{machabstr/Hello GPU}
+
+*** `SIMT' and Branches
+\kayvoninc{29}{0.85in 0.9in 10.5in 6.8in }
+
+\kayvoncredit
+
+*** GPU Abstraction: Core Model Ideas
+
+How do these aspects show up in the model?
+
+- View concrete counts as an implementation detail
+  - SIMD lane
+  - Core
+  - Scheduling slot
+- Program as if there are infinitely many of them
+- Hardware division is expensive
+
+  Make \(n\)D grids part of the model to avoid it
+- Design the model to expose /extremely/ fine-grain concurrency
+
+  (e.g. between loop iterations!)
+- Draw from the same pool of concurrency to hide latency
+
+*** GPU Program 'Scopes'
+
+| *Hardware*  | *CL adjective* | *OpenCL*  | *CUDA*       |
+|-------------+----------------+-----------+--------------|
+| SIMD lane   | private        | Work Item | Thread       |
+| SIMD Vector | ---            | Subgroup  | Warp         |
+| Core        | local          | Workgroup | Thread Block |
+| Processor   | global         | =NDRange= | Grid         |
+
+*** GPU: Communication
+
+What forms of communication exist at each scope?
+#+LATEX: \begin{hidden}
+- Subgroup: Shuffles (!)
+- Workgroup: Scratchpad + barrier, local atomics + mem fence
+- Grid: Global atomics
+#+LATEX: \end{hidden}
+
+Can we just do locking like we might do on a CPU?
+#+LATEX: \begin{hidden}
+- Indepdendent forward progress of all threads is not guaranteed: no.
+
+  (true until recently)
+
+- But: Device partitioning can help!
+#+LATEX: \end{hidden}
+
+*** GPU Programming Model: Commentary
+
+Advantage:
+
+- Clear path to scaling in tmers of core count
+- Clear path to scaling in tmers of SIMD lane count
+
+Disadvantages:
+
+- "Vector" / "Warp" / "Wavefront"
+
+  - Important hardware granularity
+  - Poorly/very implicitly represented
+
+- What is the impact of reconvergence?
+
+*** Performance: Limits to Concurrency
+
+What limits the amount of concurrency exposed to GPU hardware?
+
+#+LATEX: \begin{hidden}
+- Amount of register space
+
+  *Important:* Size of (per-lane) register file is /variable/
+
+- Amount of scratchpad space
+
+  Size of (per-group) scratchpad space is /variable/
+
+- Block size
+- Available ILP
+- Number of scheduler (warp/group) slots (not really)
+- Synchronization
+#+LATEX: \end{hidden}
+
+*** Memory Systems: Recap
+
+#+BEGIN_CENTER
+\begin{tikzpicture}
+[active/.style={ultra thick,red}]
+\draw [thick,black,fill=green!50] (0,0) rectangle ++(-2,5.5)
+    node [pos=0.5] {Processor} ;
+
+\draw [thick,black,fill=red!50] (6,0) rectangle ++(2,5.5)
+    node [pos=0.5] {Memory} ;
+
+\def\clkfat{thick}
+\def\rwfat{thick}
+\def\addrfat{thick}
+\def\datafat{thick}
+\tikzset{datastyle/.style={thick,<->}}
+
+%\only<4-5>{\def\clkfat{active}}
+%\only<3-4>{\def\rwfat{active}}
+%\only<2-4>{\def\addrfat{active}}
+%\only<6>{
+    %\tikzset{datastyle/.style={active,<-}}
+%}
+
+\draw [->,\clkfat] (0,0.5) -- ++(6,0)
+    node [pos=0.5,anchor=north,font=\scriptsize] {CLK} ;
+
+\draw [->,\rwfat] (0,1) -- ++(6,0)
+    node [pos=0.5,anchor=north,font=\scriptsize] {R/$\bar{\text{W}}$} ;
+
+\foreach \i in {1,2,...,15}
+\draw [->,\addrfat] (0,1.5+0.1*\i) -- ++(6,0) ;
+
+\draw [->,\addrfat] (0,1.5) -- ++(6,0)
+    node [pos=0.5,anchor=north,font=\scriptsize] {A0..15} ;
+
+\foreach \i in {1,2,...,15}
+\draw [datastyle] (0,3.5+0.1*\i) -- ++(6,0) ;
+
+\draw [datastyle] (0,3.5) -- ++(6,0)
+    node [pos=0.5,anchor=north,font=\scriptsize] {D0..15} ;
+\end{tikzpicture}
+#+END_CENTER
+
+
+*** Parallel Memories
+
+*Problem:* Memory chips have only one data bus.
+
+So how can multiple threads read multiple data items from memory
+simultaneously?
+
+#+LATEX: \begin{hidden}
+Broadly:
+
+- Split a really wide data bus, but have only
+  one address bus
+- Have many 'small memories' ('/banks/') with
+  separate data and address busses, select by address LSB.
+
+#+LATEX: \end{hidden}
+
+Where does banking show up?
+#+LATEX: \begin{hidden}
+- Scratchpad
+- GPU register file
+- Global memory
+#+LATEX: \end{hidden}
+
+*** Stride drawing macro                                    :B_ignoreheading:
+    :PROPERTIES:
+    :BEAMER_env: ignoreheading
+    :END:
+
+#+BEGIN_EXPORT latex
+\newcommand{\drawstride}[1]{
+    \def\stride{#1}
+
+    \ifshowhidden
+    \foreach\thread in{0,1,2,3}
+    {
+      \pgfmathtruncatemacro{\addr}{\stride*\thread}
+      \draw [very thick,->,shorten >=0.1cm] (t\thread) -- (a\addr) ;
+      \fill (a\addr) circle (0.07cm) ;
+    }
+    \fi
+}
+#+END_EXPORT
+
+*** Memory Banking
+
+Fill in the access pattern:
+
+\begin{tikzpicture}[
+    explanation/.style={right,inner xsep=0,text width=10cm}
+    ]
+
+    \uncover<+->{
+    \foreach\bank in {0,1,2,3}
+    {
+      \foreach\entry in {0,1,...,5}
+      {
+      \pgfmathtruncatemacro{\addr}{\bank+\entry*4}
+      \draw [fill=orange] (0.5*\entry,\bank) rectangle +(0.5,0.5)
+          coordinate [pos=0.5] (a\addr) ;
+      \node at (a\addr) [font=\small] { \addr };
+      }
+      \draw (3,\bank) rectangle +(1,0.5)
+      node [pos=0.5] { $\cdots$ } ;
+    }
+    }
+
+    \draw [thick,->] (-0.25,0) -- ++(0,2)
+    node [pos=1,above left=0cm and -0.15cm,inner xsep=0] {Bank} ;
+    \draw [thick,->] (0,-0.25) -- +(2,0)
+    node [pos=1,right,inner ysep=0] {Address} ;
+
+    \begin{scope}[xshift=7cm,yshift=-0.3cm]
+    \foreach\thread in{0,1,2,3}
+      \draw [fill=gray!40] (0,\thread) rectangle +(0.5,0.5)
+      coordinate [pos=0.5] (t\thread) ;
+    \draw [thick,->] (0.75,0) -- ++(0,2)
+      node [pos=1,above right=0cm and -0.15cm,inner xsep=0] {Thread} ;
+
+    \end{scope}
+
+    \foreach\thread in{0,1,2,3}
+      \node [font=\small] at (t\thread) {\thread};
+
+    \coordinate (expl) at (0,-1.5) ;
+
+    \uncover<+>{
+    \node [explanation] at (expl)
+    {
+      \texttt{local\_variable[lid(0)]} \\
+    } ;
+    \drawstride{1}
+    }
+
+    \uncover<+>{
+    \node [explanation] at (expl)
+    {
+      \texttt{local\_variable[BANK\_COUNT*lid(0)]} \\
+    } ;
+    \drawstride{4}
+    }
+
+    \uncover<+>{
+    \node [explanation] at (expl)
+    {
+      \texttt{local\_variable[(BANK\_COUNT+1)*lid(0)]} \\
+    } ;
+    \drawstride{5}
+    }
+
+    \uncover<+>{
+    \node [explanation] at (expl)
+    {
+      \texttt{local\_variable[ODD\_NUMBER*lid(0)]} \\
+    } ;
+    \drawstride{7}
+    }
+
+    \uncover<+>{
+    \node [explanation] at (expl)
+    {
+      \texttt{local\_variable[2*lid(0)]} \\
+    } ;
+    \drawstride{2}
+    }
+    \uncover<+>{
+    \node [explanation] at (expl)
+    {
+      \texttt{local\_variable[f(gid(0))]} \\
+    } ;
+    \drawstride{0}
+    }
+
+\end{tikzpicture}
+*** Memory Banking: Observations
+
+- Factors of two in the stride: generally bad
+- In a conflict-heavy access pattern, padding can help
+  - Usually not a problem since scratchpad is transient by definition
+- Word size (bank offset) may be adjustable (Nvidia)
+
+Given that unit strides are beneficial on global memory access, how do you realize a transpose?
+
+#+LATEX: \begin{hidden}
+Workgroup size (e.g.): 16x16
+
+=__local float tmp[16 * 17];=
+
+=tmp[lid(0)*17 + lid(1)] = a[lid(1) * 16 + lid(0)];=
+
+=barrier(CLK_LOCAL_MEM_FENCE);=
+
+#+LATEX: \end{hidden}
+
+*** GPU Global Memory System
+
+#+ATTR_LATEX: :width 0.8\textwidth
+[[./media/amd-mem-channels.png]]
+
+[[http://developer.amd.com/wordpress/media/2013/07/AMD_Accelerated_Parallel_Processing_OpenCL_Programming_Guide-rev-2.7.pdf][GCN Optimization Manual, AMD]]
+
+*** GPU Global Memory Channel Map: Example
+
+Byte address decomposition:
+
+\begin{tikzpicture}[font=\small]
+\def\bitw{0.3}
+
+\draw (-7*\bitw,0) rectangle (-0*\bitw,1) node [pos=0.5] {Address};
+\node [anchor=north] at (-7*\bitw,0) {8 | 7};
+\node [anchor=north east] at (0,0) {0};
+\draw (-10*\bitw,0) rectangle (-7*\bitw,1) node [pos=0.5] {Chnl};
+\node [anchor=north] at (-10*\bitw,0) {11 | 10};
+\draw (-13*\bitw,0) rectangle (-10*\bitw,1) node [pos=0.5] {Bank};
+\node [anchor=north] at (-13*\bitw,0) {?};
+\draw (-31*\bitw,0) rectangle (-13*\bitw,1) node [pos=0.5] {Address};
+\node [anchor=north west] at (-31*\bitw,0) {31};
+\end{tikzpicture}
+
+Implications:
+
+- Transfers between compute unit and channel have granularity
+  - Reasonable guess: warp/wavefront size $\times$ 32bits
+  - Should strive for good utilization ('/Coalescing/')
+- Channel count often /not/ a power of two -> complex mapping
+  - /Channel conflicts/ possible
+- Also /banked/
+  - /Bank conflicts/ also possible
+
+*** GPU Global Memory: Performance Observations
+
+Key quantities to observe for GPU global memory access:
+
+#+LATEX: \begin{hidden}
+- Stride
+- Utilization
+#+LATEX: \end{hidden}
+
+Are there any guaranteed-good memory access patterns?
+
+#+LATEX: \begin{hidden}
+Unit stride, just like on the CPU
+#+LATEX: \end{hidden}
+
+- Need to consider access pattern /across entire device/
+- /GPU caches:/ Use for /spatial/, not for temporal locality
+- Switch available: L1/Scratchpad partitioning
+  - Settable on a per-kernel basis
+- Since GPUs have meaningful caches at this point:
+
+  Be aware of cache annotations (see later)
+
+*** Queue Brick Macro                                       :B_ignoreheading:
+    :PROPERTIES:
+    :BEAMER_env: ignoreheading
+    :END:
+
+#+BEGIN_EXPORT latex
+\newcommand{\qbrick}[6]{
+\draw [fill=#4!50]
+    (0,0) rectangle (#1,#2) coordinate [pos=0.5] (brickfront);
+\draw [fill=#4]
+    (#1,0) -- (#1,0,-1) -- (#1,#2,-1) -- (#1,#2) --cycle;
+\draw [fill=#4]
+    (0,#2) -- (0,#2,-1) -- (#1,#2,-1) -- (#1,#2) --cycle;
+#6
+\begin{pgfonlayer}{foreground}
+    \node [fill=#4!50,inner xsep=2pt,inner ysep=2pt,opacity=0.7,#5] at (brickfront) { #3 } ;
+    \node [#5] at (brickfront) { #3 } ;
+\end{pgfonlayer}
+}
+#+END_EXPORT
+*** Host-Device Concurrency
+
+**** Explanation                                                   :B_column:
+     :PROPERTIES:
+     :BEAMER_col: 0.45
+     :END:
+
+- Host and Device run asynchronously
+- Host submits to queue:
+  - Computations
+  - Memory Transfers
+  - Sync primitives
+  - \dots
+
+- Host can wait for:
+  - /drained/ queue
+  - Individual "events"
+- Profiling
+
+**** Figure                                                        :B_column:
+     :PROPERTIES:
+     :BEAMER_col: 0.45
+     :END:
+
+\begin{tikzpicture}
+    \qbrick{1.25}{2}{Host}{gray}{}{}
+    \begin{scope}[xshift=2.5cm,yshift=-1.5cm]
+    \qbrick{2.5}{1.25}{Device}{gray}{}{}
+    \end{scope}
+    \begin{scope}[xshift=2.5cm]
+    \qbrick{0.75}{2}{Queue 1}{blue}{text=white,rotate=90}{
+      \foreach\i in {0,0.2,...,1.4}
+      \draw (0,\i) -- (0.75,\i) -- (0.75,\i,-1);
+    }
+    \end{scope}
+    \begin{scope}[xshift=3.5cm]
+    \qbrick{0.75}{2}{Queue 2}{blue}{text=white,rotate=90}{
+      \foreach\i in {0,0.2,...,0.9}
+      \draw (0,\i) -- (0.75,\i) -- (0.75,\i,-1);
+    }
+    \end{scope}
+
+    \node [font=\Large] at (5.25,1.25) {\dots} ;
+
+    \draw [very thick,->] (1.25,1,-0.5) -| (2,2.5,-0.5) -| (2.875,2,-0.5);
+    \draw [very thick,->] (2,2.5,-0.5) -| (3.875,2,-0.5);
+    \draw [very thick,->] (2,2.5,-0.5) -| (4.875,2,-0.5);
+    \draw [very thick,->] (2.5,-1) -| (0.625,0);
+
+\end{tikzpicture}
+
+*** Timing GPU Work
+
+How do you find the execution time of a GPU kernel?
+#+LATEX: \begin{hidden}[3cm]
+- Do a few 'warm-up' calls to the kernel
+- Drain the queue
+- Start the timer
+- Run the kernel enough times to get to a few milliseconds run time
+- Drain the queue
+- Stop the timer, divide by the number of runs
+#+LATEX: \end{hidden}
+
+How do you do this asynchronously?
+#+LATEX: \begin{hidden}
+- Enqueue 'markers' instead of draining the queue.
+- Find timing of 'markers' after work is complete
+#+LATEX: \end{hidden}
+
+*** Host-Device Data Exchange
+
+Sad fact: Must get data onto device to compute
+- Transfers can be a bottleneck
+- If possible, overlap with computation
+- Pageable memory incurs difficulty in GPU-host transfers, often entails (another!) CPU side copy
+- "Pinned memory": unpageable, avoids copy
+  - Various /system-defined/ ways of allocating pinned memory
+"Unified memory" (CUDA)/"Shared Virtual Memory" (OpenCL):
+- GPU directly accesses host memory
+- Main distinction: Coherence
+  - "Coarse grain": Per-buffer fences
+  - "Fine grain buffer": Byte-for-byte coherent (device mem)
+  - "Fine grain system": Byte-for-byte coherent (anywhere)
+
+*** Performance: Ballpark Numbers?
+
+Bandwidth host/device:
+#+LATEX: \begin{hidden}
+PCIe v2: 8 GB/s --- PCIe v3: 16 GB/s --- NVLink: 200 GB/s
+#+LATEX: \end{hidden}
+
+Bandwidth on device:
+#+LATEX: \begin{hidden}
+Registers: $\sim$10 TB/s --- Scratch: $\sim$10 TB/s --- Global: 500 GB/s
+#+LATEX: \end{hidden}
+
+Flop throughput?
+#+LATEX: \begin{hidden}
+10 TFLOPS single precision -- 3 TFLOPS double precision
+#+LATEX: \end{hidden}
+
+Kernel launch overhead?
+#+LATEX: \begin{hidden}
+10 microseconds
+#+LATEX: \end{hidden}
+
+Good source of details: [[https://en.wikipedia.org/wiki/List_of_Nvidia_graphics_processing_units][Wikipedia: List of Nidia GPUs]]
+
+** Convergence, Differences in Machine Mapping
+*** Die Shot Gallery
+
+\hspace*{-0.25\textwidth}
+\begin{tabular}{p{0.25\textwidth}p{0.25\textwidth}p{0.25\textwidth}p{0.25\textwidth}p{0.25\textwidth}}
+\includegraphics[width=0.25\textwidth]{gt200-die.jpg}
+&
+\includegraphics[width=0.25\textwidth]{fermi-die-shot.jpeg}
+&
+\centering
+\includegraphics[width=3.5cm,angle=90]{ivy-bridge-die-shot.jpeg}
+&
+\includegraphics[width=0.25\textwidth]{tahiti-die-shot.jpeg}
+&
+\includegraphics[width=0.25\textwidth]{gk110-die-shot.jpeg}
+\\
+\centering Nv~GT200\par(2008)
+&
+\centering Nv~Fermi\par(2010)
+&
+\centering Intel IVB\par(2012)
+&
+\centering AMD Tahiti \par(2012)
+&
+\centering Nv GK110\par(2012?)
+\end{tabular}
+
+*** Trends in Processor Architecture
+
+What can we expect from future processor architectures?
+
+#+LATEX: \begin{hidden}
+- Commodity chips
+- ``Infinitely'' many cores
+- ``Infinite'' vector width
+- Must hide memory latency ($\rightarrow$ ILP, SMT)
+- Compute bandwidth $\gg$ Memory bandwidth
+- Bandwidth only achievable by /homogeneity/
+- Can't keep the whole thing powered all the time anyway. Consequence?
+
+  Lots of weird stoff springs up. Examples: "Raytracing Cores", "Tensor Cores"
+#+LATEX: \end{hidden}
+
+*** Common Challenges
+
+What are the common challenges encountered by both CPUs and GPUs?
+#+LATEX: \begin{hidden}[3cm]
+- Dealing with Latency (ILP/SMT/Caches)
+- Exposing concurrency
+- Expose a coherent model for talking to SIMD
+- Making memory system complexity manageable
+#+LATEX: \end{hidden}
+
+*Goal:* Try to see CPUs and GPUs as points in a design space
+'continuum' rather than entirely different things.
+
+** Lower-Level Abstractions: SPIR-V, PTX
+
+*** PTX: Demo
+
+\demo{machabstr/PTX and SASS}
+
+[[https://docs.nvidia.com/cuda/parallel-thread-execution/index.html#cache-operators][Nvidia PTX manual]]
+
+*** PTX: Cache Annotations
+
+Loads:
+
+| =.ca= | Cache at all levels--likely to be accessed again         |
+| =.cg= | Cache at global level (cache in L2 and below and not L1) |
+| =.cs= | Cache streaming--likely to be accessed once              |
+| =.lu= | Last use                                                 |
+| =.cv= | Consider cached system memory lines stale--fetch again   |
+
+Stores:
+
+| =.wb= | Cache write-back all coherent levels                     |
+| =.cg= | Cache at global level (cache in L2 and below and not L1) |
+| =.cs= | Cache streaming--likely to be accessed once              |
+| =.wt= | Cache write-through (to system memory)                   |
+
+Lost/hidden at the C level!
+
+*** SPIR-V
+
+/Currently:/ C (OpenCL C, GLSL, HLSL) used as intermediate representations to feed GPUs.
+
+Downsides:
+
+- Compiler heuristics may be focused on human-written code
+- Parsing overhead (preprocessor!)
+- C semantics may not match (too high-level)
+
+SPIR-V:
+
+- Goal: Common intermediate represenation ("IR") for all GPU-facing code (Vulkan, OpenCL)
+- "Extended Instruction Sets":
+  - General compute (OpenCL/CUDA) needs: pointers, special functions
+- Different from "SPIR" (tweaked LLVM IR)
+
+*** SPIR-V Example
+
+\scriptsize
+#+BEGIN_EXAMPLE
+          %2 = OpTypeVoid
+          %3 = OpTypeFunction %2                      ; void ()
+          %6 = OpTypeFloat 32                         ; 32-bit float
+          %7 = OpTypeVector %6 4                      ; vec4
+          %8 = OpTypePointer Function %7              ; function-local vec4*
+         %10 = OpConstant %6 1
+         %11 = OpConstant %6 2
+         %12 = OpConstantComposite %7 %10 %10 %11 %10 ; vec4(1.0, 1.0, 2.0, 1.0)
+         %13 = OpTypeInt 32 0                         ; 32-bit int, sign-less
+         %14 = OpConstant %13 5
+         %15 = OpTypeArray %7 %14
+[...]
+         %34 = OpLoad %7 %33
+         %38 = OpAccessChain %37 %20 %35 %21 %36      ; s.v[2]
+         %39 = OpLoad %7 %38
+         %40 = OpFAdd %7 %34 %39
+               OpStore %31 %40
+               OpBranch %29
+         %41 = OpLabel                                ; else
+         %43 = OpLoad %7 %42
+         %44 = OpExtInst %7 %1 Sqrt %43               ; extended instruction sqrt
+         %45 = OpLoad %7 %9
+         %46 = OpFMul %7 %44 %45
+               OpStore %31 %46
+#+END_EXAMPLE
+
+* Performance: Expectation, Experiment, Observation
+  :PROPERTIES:
+  :RELATE_TREE_SECTION_NAME: perf
+  :RELATE_TREE_SECTION_OPENED: true
+  :END:
+** Forming Expectations of Performance
+*** Qualifying Performance
+
+- What is /good/ performance?
+- Is speed-up (e.g. GPU vs CPU? C vs Matlab?) a meaningful way to assess performance?
+- How else could one /form an understanding/ of performance?
+
+#+LATEX: \begin{hidden}
+Modeling: how understanding works in science
+#+LATEX: \end{hidden}
+
+[[https://blogs.fau.de/hager/files/2017/07/sc17_tutorial_NLPE_Web_01.pdf][Hager et al. `17]]
+
+[[https://doi.org/10.1016/0167-8191(89)90100-2][Hockney et al. `89]]
+
+*** A Story of Bottlenecks
+
+Imagine:
+- A bank with a few service desks
+- A revolving door at the entrance
+
+What situations can arise at /steady-state/?
+#+LATEX: \begin{hidden}
+- Line inside the bank (good)
+- Line at the door (bad)
+#+LATEX: \end{hidden}
+
+What numbers do we need to characterize performance of this system?
+
+#+LATEX: \begin{hidden}[3cm]
+- $P_{\text{peak}}$: [task/sec] Peak throughput of the service desks
+- $I$: [tasks/customer] Intensity
+- $b$: [customers/sec] Throughput of the revolving door
+#+LATEX: \end{hidden}
+
+*** A Story of Bottlenecks (cont'd)
+
+- $P_{\text{peak}}$: [task/sec] Peak throughput of the service desks
+- $I$: [tasks/customer] Intensity
+- $b$: [customers/sec] Throughput of the revolving door
+
+What is the aggregate throughput?
+#+LATEX: \begin{hidden}
+
+Bottleneck is either
+- the service desks (good) or
+- the revolving door (bad).
+
+\[P \le \min(P_{\text{peak}}, I\cdot b)\]
+#+LATEX: \end{hidden}
+
+[[https://blogs.fau.de/hager/files/2017/07/sc17_tutorial_NLPE_Web_01.pdf][Hager et al. `17]]
+
+*** Application in Computation
+
+Translate the bank analogy to computers:
+#+LATEX: \begin{hidden}
+- Revolving door: typicallly: Memory interface
+- Revolving door throughput: Memory bandwidth [bytes/s]
+- Service desks: Functional units (e.g. floating point)
+- $P_{\text{peak}}$: Peak FU throughput (e.g.: [flops/s])
+- Intensity: e.g. [flops/byte]
+#+LATEX: \end{hidden}
+
+Which parts of this are task-dependent?
+#+LATEX: \begin{hidden}
+- All of them! This is not /a/ model, it's a /guideline/ for making models.
+- Specifically $P_{\text{peak}}$ varies substantially by task
+#+LATEX: \end{hidden}
+
+\[P \le \min(P_{\text{peak}}, I\cdot b)\]
+
+[[https://blogs.fau.de/hager/files/2017/07/sc17_tutorial_NLPE_Web_01.pdf][Hager et al. `17]]
+
+*** A Graphical Representation: 'Roofline'
+
+Plot (often log-log, but not necessarily):
+
+- X-Axis: Intensity
+- Y-Axis: Performance
+
+What does our inequality correspond to graphically?
+\[P \le \min(P_{\text{peak}}, I\cdot b)\]
+
+\begin{tikzpicture}
+\draw [->,thick] (-0.25,0) -- (4,0) node [anchor=west] { Intensity };
+\draw [->,thick] (0,-0.25) -- (0, 2.5) node [pos=0.5,rotate=90,anchor=south] { Performance };
+\end{tikzpicture}
+
+What does the shaded area mean?
+#+LATEX: \begin{hidden}
+Achievable performance
+#+LATEX: \end{hidden}
+
+[[https://blogs.fau.de/hager/files/2017/07/sc17_tutorial_NLPE_Web_01.pdf][Hager et al. `17]]
+
+*** Example: Vector Addition
+
+#+BEGIN_SRC c
+double r, s, a[N];
+for (i=0; i<N; ++i)
+  a[i] = r + s * a[i];}
+#+END_SRC
+
+Find the parameters and make a prediction.
+
+#+LATEX: \begin{hidden}[3cm]
+Machine model:
+- Memory Bandwidth: e.g. $b=10$ GB/s
+- $P_{\text{peak}}$: e.g. 4 GF/s
+
+Application model:
+- $I$ = 2 flops / 16 bytes = 0.125 flops/byte
+#+LATEX: \end{hidden}
+
+\begin{tikzpicture}
+\draw [->,thick] (-0.25,0) -- (4,0) node [anchor=west] { Intensity };
+\draw [->,thick] (0,-0.25) -- (0, 2.5) node [pos=0.5,rotate=90,anchor=south] { Performance };
+\end{tikzpicture}
+
+[[https://blogs.fau.de/hager/files/2017/07/sc17_tutorial_NLPE_Web_01.pdf][Hager et al. `17]]
+
+*** Refining the Model
+
+- $P_{\text{max}}$: Applicable peak performance of a loop, assuming that data
+  comes from the fastest data path (this is not necessarily $P_{\text{peak}}$)
+- Computational intensity (“work” per byte transferred) over the
+  slowest data path utilized
+- $b$: Applicable peak bandwidth of the slowest data path utilized
+
+[[https://blogs.fau.de/hager/files/2017/07/sc17_tutorial_NLPE_Web_01.pdf][Hager et al. `17]]
+
+*** Calibrating the Model: Bandwidth
+
+Typically done with the STREAM benchmark.
+
+Four parts: Copy, Scale, Add, Triad =a[i] = b[i] + s\cdot c[i]=
+
+Do the four measurements matter?
+#+LATEX: \begin{hidden}
+- No--they're a crude attempt at characterizing intensity.
+- On a modern machine, all four measurements should be identical.
+#+LATEX: \end{hidden}
+
+Any pitfalls?
+#+LATEX: \begin{hidden}
+Streaming stores, remember?
+#+LATEX: \end{hidden}
+
+[[https://www.cs.virginia.edu/stream/][McCalpin: STREAM]]
+
+*** Calibrating the Model: Peak Throughput
+
+Name aspects that should/could be factored in when determining peak performance:
+#+LATEX: \begin{hidden}[5cm]
+- Types of operation (FMA? Or only adds?)
+- SIMD
+- Pipeline utilization / operation latency
+- Throughput of faster datapaths
+#+LATEX: \end{hidden}
+
+*** Practical Tool: IACA
+
+**Question:** Where to obtain an estimate of $P_{\text{max}}$?
+
+\demo{perf/Forming Architectural Performance Expectations}
+
+Questions:
+
+- What does IACA do about memory access? / the memory hierarchy?
+
+*** An Example: Exploring Titan V Limits
+
+#+ATTR_LATEX: :height 4cm
+[[./media/tim-titan-v-roofline.png]]
+
+- Memory bandwidth: 652 GB/s theoretical, 540 GB/s achievable
+- Scratchpad / L1 throughput:
+
+ 80 (cores) x 32 (simd width) x 4 (word bytes) x 1.2 (base clock) ~= 12.288 TB/s
+
+- Theoretical peak flops of 6.9 TFLOPS/s [Wikipedia]
+
+[[https://www.paranumal.com/single-post/2018/10/11/Rough-n-ready-Roofline-Titan-V-edition][Warburton `18]]
+
+*** Rooflines: Assumptions
+
+What assumptions are built into the roofline model?
+#+LATEX: \begin{hidden}
+- Perfect overlap
+
+  (What would imperfect overlap be in the bank analogy?)
+- Only considers the dominant bottleneck
+- Throughput-only (!)
+
+  No latency effects, no start-up effects, only steady-state
+#+LATEX: \end{hidden}
+
+Important to remember:
+
+- It is what you make of it--the better your calibration, the more info you get
+- But: Calibrating on experimental data loses predictive power
+
+  (e.g. SPMV)
+
+*** Modeling Parallel Speedup: A `Universal' Scaling Law
+
+Develop a model of /throughput/ $X(N)$ for a given load $N$, assuming
+execution resources scale with $N$.
+
+#+LATEX: \begin{hidden}[5cm]
+
+\[ X(N)=\frac{\gamma N}{1+\alpha \cdot (N-1)+\beta N\cdot (N-1)} \]
+
+What do the individual terms model?
+
+- $\gamma$: Throughput increase per load increase
+- $\alpha$: *Contention* due to waiting/queueing for shared resources/sequential sections
+
+  ("Amdahl's law")
+
+- $\beta$: *Incoherence penalty* due to waiting for data to become coherent through /point-to-point exchange/
+#+LATEX: \end{hidden}
+
+[[[http://www.perfdynamics.com/Manifesto/USLscalability.html#njg93][Gunther `93]]]
+
+** Timing Experiments and Potential Issues
+
+*** Combining Multiple Measurements
+
+How can one combine multiple performance measurements? (e.g. "average speedup"?)
+
+/Example:/ Which computer should you buy?
+
+| Execution time [s] | *Computer A* | *Computer B* | *Computer C* |
+|--------------------+--------------+--------------+--------------|
+| Program 1          |            1 |           10 |           20 |
+| Program 2          |         1000 |          100 |           20 |
+
+#+LATEX: \begin{hidden}[5cm]
+|                 | *Computer A* | *Computer B* | *Computer C* |
+|-----------------+--------------+--------------+--------------|
+| Arithmetic mean |        500.5 |           55 |           20 |
+| Geometric mean  |       31.622 |       31.622 |           20 |
+#+LATEX: \end{hidden}
+
+*** Combining Multiple Measurements: Observations
+
+|                 | *Computer A* | *Computer B* | *Computer C* |
+|-----------------+--------------+--------------+--------------|
+| Arithmetic mean |        500.5 |           55 |           20 |
+| Geometric mean  |       31.622 |       31.622 |           20 |
+
+#+LATEX: \begin{hidden}[5cm]
+- Depending on normalization, the arithmetic mean will produce
+  an arbitrary ranking
+- Geometric mean $\sqrt[n]{a_1\cdots a_n}$: consistent ranking
+- Is geomean *good*? (What is the meaning of multiplying times?)
+
+Take-home message:
+- Be mindful of units when combining measurements (e.g. sums of times make sense, but products of times may not)
+- Avoid combined measurements if you can
+- Ideally: purposefully choose a weighting
+#+LATEX: \end{hidden}
+
+[[https://en.wikipedia.org/w/index.php?title=Geometric_mean&oldid=865245779#Properties][Wikipedia]]
+
+*** Timing Experiments: Pitfalls
+
+What are potential issues in timing experiments? (What can you do about them?)
+
+#+LATEX: \begin{hidden}[5cm]
+- Warm-up effects (do a few runs before timing to only time steady state)
+- Timing noise
+  - Know your timer granularity
+  - Know your clock kinds (wall, montone, process)
+  - Know your clock sources (RTC, PIT, APIC, TSC (nominal), TSC (actual))
+  - Know your overheads (function call/kernel launch)
+  - Make sure your timing granularity is appropriate
+
+    (On-node: one second is a reasonable number)
+#+LATEX: \end{hidden}
+
+*** Timing Experiments: Pitfalls (part 2)
+
+What are potential issues in timing experiments? (What can you do about them?)
+#+LATEX: \begin{hidden}[5cm]
+- NUMA placement (use =numactl=, =libnuma=, or respect first-touch)
+- Thread migration between cores (and resulting cache effects)
+  - Pin your threads to cores
+- Uninitialized pages are never fetched
+  - Is =calloc= good enough?
+- Frequency Scaling
+  - Turn it off or run long enough for thermal steady-state
+  - Understand how RAPL ("Running average power limit") and "power leases" work
+  - Realize there's a dependency on what instructions you execute
+- Noise from other users
+#+LATEX: \end{hidden}
+
+** Profiling and Observable Quantities
+*** Profiling: Basic Approaches
+
+Measurement of "quantities" relating to performance
+
+- Exact: Through binary instrumentation (valgrind/Intel Pin/...)
+- Sampling: At /some/ interval, examine the program state
+
+We will focus on profiling by /sampling/.
+
+Big questions:
+
+- What to measure?
+- At what intervals?
+
+*** Defining Intervals: Performance Counters
+
+A /performance counter/ is a counter that increments every time a
+given *event* occurs.
+
+What events?
+
+- \demo{perf/Using Performance Counters}
+- see also [[https://software.intel.com/en-us/articles/intel-sdm][Intel SDM, Volume 3]]
+
+Interaction with performance counters:
+
+- Read repeatedly from user code
+- Interrupt program execution when a threshold is reached
+- Limited resource!
+  - Only a few available: 4-8 per core
+  - Each can be configured to count one type of event
+  - *Idea:* Alternate counter programming at some rate
+
+    (requires steady-state execution!)
+
+*** Profiling: What to Measure
+
+- Raw counts are hard to interpret
+- Often much more helpful to look at /ratios/ of counts
+
+  per core/subroutine/loop/...
+
+What ratios should one look at?
+
+\demo{perf/Using Performance Counters}
+
+*** Profiling: Useful Ratios
+
+Basic examples:
+
+- (Events in Routine 1)/(Events in Routine 2)
+- (Events in Line 1)/(Events in Line 2)
+- (Count of Event 1 in X)/(Count of Event 2 in X)
+
+Architectural examples:
+
+#+LATEX: \begin{hidden}[3cm]
+- instructions / cycles
+- L1-dcache-load-misses / instructions
+- LLC-load-misses / instructions
+- stalled-cycles-frontend / cycles
+- stalled-cycles-backend / cycles
+#+LATEX: \end{hidden}
+
+Issue with 'instructions' as a metric?
+#+LATEX: \begin{hidden}[1cm]
+May or may not correlate with 'amount of useful work'
+#+LATEX: \end{hidden}
+
+*** "Top-Down" Performance Analysis
+
+**Idea:** Account for useful work per available issue slot
+
+What is an issue slot?
+#+LATEX: \begin{hidden}
+A clock cycle that passed at an interface to an execution pipeline
+#+LATEX: \end{hidden}
+
+[[[https://doi.org/10.1109/ISPASS.2014.6844459][Yasin `14]]]
+
+*** Issue Slots: Recap
+
+#+ATTR_LATEX: :height 0.8\textheight
+[[./media/sandy-bridge-pipeline.png]]
+
+[David Kanter / Realworldtech.com]
+
+*** What can happen to an issue slot: at a high level?
+
+#+ATTR_LATEX: :width 0.8\textwidth
+[[./media/issue-slot-fate-l1.png]]
+
+[[[https://doi.org/10.1109/ISPASS.2014.6844459][Yasin `14]]]
+
+*** What can happen to an issue slot: in detail?
+
+#+ATTR_LATEX: :height 0.8\textheight
+[[./media/issue-slot-fate-hierarchy.png]]
+
+[[[https://doi.org/10.1109/ISPASS.2014.6844459][Yasin `14]]]
+** Practical Tools: perf, toplev, likwid
+*** Demo: Performance Counters
+
+Show the rest of:
+
+\demo{perf/Using Performance Counters}
+
+*** TODO Things to cover
+
+- Hager: [[https://blogs.fau.de/hager/archives/7850][Himeno Roofline]]
+- Why IPC (or CPI) is not a good performance metric: https://blogs.fau.de/hager/archives/8015
+
+* Performance-Oriented Languages and Abstractions
+  :PROPERTIES:
+  :RELATE_TREE_SECTION_NAME: lang
+  :RELATE_TREE_SECTION_OPENED: true
+  :END:
+** Expression Trees
+*** Expression Trees and Term Rewriting
+
+Demos:
+
+- \demo{lang/01 Expression Trees}
+- \demo{lang/02 Traversing Trees}
+- \demo{lang/03 Defining Custom Node Types}
+- \demo{lang/04 Common Operations}
+
+How do expression trees come to be? (not our problem here)
+#+LATEX: \begin{hidden}
+- Partitioning, classification of input stream into tokens (lexing)
+- Extraction of higher-level constructs from token stream (parsing)
+  - Recursive descent
+  - Table/automata-based (e.g. Yacc, ANTLR, PLY, boost::spirit)
+#+LATEX: \end{hidden}
+
+*** Embedded languages
+
+Main challenge: Obtaining a syntax tree. Approaches?
+#+LATEX: \begin{hidden}
+- Symbolic execution (seen above, runtime)
+- Type system abuse
+  - \demo{lang/Expression Templates}
+- boost::metaparse (string $\to$ tree at compile time)
+- "Reflection"
+  - \demo{lang/05 Reflection in Python}
+#+LATEX: \end{hidden}
+
+*** Macros: Goals and Approaches
+
+What is a macro?
+#+LATEX: \begin{hidden}
+- In C: Simple textual replacement with parameters
+- Generally: any type of compile-time computation (that operates on the code)
+  - Question: How would you express loops in the C preprocessor?
+#+LATEX: \end{hidden}
+
+What data do macro systems operate on?
+#+LATEX: \begin{hidden}
+- Character-streams
+- Syntax/expression trees
+#+LATEX: \end{hidden}
+
+*** Macros: Textual and Syntactic, Hygiene
+
+Macros: What can go wrong if you're not careful?
+#+BEGIN_SRC c
+#define INCI(i) do { int a=0; ++i; } while(0)
+int main(void)
+{
+    int a = 4, b = 8;
+    INCI(a);
+    INCI(b);
+    printf("a is now %d, b is now %d\n", a, b);
+    return 0;
+}
+#+END_SRC
+
+How can the problem above be avoided?
+#+LATEX: \begin{hidden}
+Ensure macro-internal identifiers (e.g. =a= above)
+#+LATEX: \end{hidden}
+
+
+*** Towards Execution
+
+\demo{lang/06 Towards Execution}
+
+** Parallel Patterns and Array Languages
+
+*** Patterns Macros                                         :B_ignoreheading:
+    :PROPERTIES:
+    :BEAMER_env: ignoreheading
+    :END:
+#+BEGIN_EXPORT latex
+\colorlet{input}{green!30}
+\colorlet{output}{red!30}
+\colorlet{intermed}{blue!30}
+
+\tikzset{
+  input/.style={circle,fill=input,draw,thick,minimum height=4.5ex},
+  output/.style={circle,fill=output,draw,thick,minimum height=4.5ex},
+  func/.style={->,thick},
+}
+#+END_EXPORT
+
+*** Reduction
+
+#+LATEX:{\Huge
+\[
+y =  f(\cdots f(f(x_1, x_2), x_3), \dots ,x_N)
+\]
+#+LATEX:}
+where $N$ is the input size.
+
+Also known as
+
+- Lisp/Python function =reduce= (Scheme: =fold=)
+- C++ STL =std::accumulate=
+
+*** Reduction: Graph
+
+#+BEGIN_CENTER
+\begin{tikzpicture}[grow'=up,every path/.style={func,<-},level distance=1cm]
+    \node [output] {$y$}
+    child {
+    node [input,fill=output!80!input] {}
+    {
+      child {
+      node [input,fill=output!60!input] {}
+      {
+          child {
+          node [input,fill=output!40!input] {}
+          {
+            child {
+            node [input,fill=output!20!input] {}
+            {
+                child {node [input] {$x_1$} }
+                child {node [input] {$x_2$} }
+            }
+            }
+            child {node [input] {$x_3$} }
+          }
+          }
+          child {node [input] {$x_4$} }
+      }
+      }
+      child {node [input] {$x_5$} }
+    }
+    }
+    child { node [input] {$x_6$} }
+    ;
+\end{tikzpicture}
+#+END_CENTER
+
+*** Approach to Reduction
+
+**** About the Function                                            :B_column:
+     :PROPERTIES:
+     :BEAMER_col: 0.4
+     :END:
+
+#+BEGIN_EXPORT latex
+\tikz
+\node [rotate=40,font=\Huge\bfseries,
+cloud,cloud ignores aspect=true,cloud puffs=15,draw,thick]
+{{ $\mathit{f(x,y)}$?}};
+#+END_EXPORT
+
+**** Reduction Development                                         :B_column:
+     :PROPERTIES:
+     :BEAMER_col: 0.6
+     :END:
+
+Can we do better?
+
+\medskip
+``Tree'' very imbalanced. What property of $f$ would allow
+`rebalancing'?
+
+\medskip
+\[
+f(f(x,y), z)=f(x,f(y,z))
+\]
+Looks less improbable if we let $x\circ y= f(x,y)$:
+\[
+x \circ(y\circ z))=(x \circ y) \circ z
+\]
+Has a very familiar name: /Associativity/
+
+*** Reduction: A Better Graph
+#+BEGIN_CENTER
+\begin{tikzpicture}[grow'=up,every path/.style={func,<-},level distance=1cm,
+    level 1/.style={sibling distance=4cm},
+    level 2/.style={sibling distance=2cm},
+    level 3/.style={sibling distance=1cm},
+    ]
+    \node [output] {$y$}
+    child {
+    node [input,fill=output!60!input] {}
+    child {
+      node [input,fill=output!40!input] {}
+      child { node [input] {$x_0$} }
+      child { node [input] {$x_1$} }
+    }
+    child {
+      node [input,fill=output!40!input] {}
+      child { node [input] {$x_2$} }
+      child { node [input] {$x_3$} }
+    }
+    }
+    child {
+    node [input,fill=output!60!input] {}
+    child {
+      node [input,fill=output!40!input] {}
+      child { node [input] {$x_4$} }
+      child { node [input] {$x_5$} }
+    }
+    child {
+      node [input,fill=output!40!input] {}
+      child { node [input] {$x_6$} }
+      child { node [input] {$x_7$} }
+    }
+    }
+    ;
+\end{tikzpicture}
+
+#+END_CENTER
+
+\begin{tikzpicture} [overlay]
+    \node [above right=1cm of current page.south west, draw,drop shadow,fill=white,
+    inner xsep=0.5cm,inner ysep=0.5cm,thick]
+    {
+      Processor allocation?
+    } ;
+\end{tikzpicture}
+
+*** Haris credit macro                                      :B_ignoreheading:
+    :PROPERTIES:
+    :BEAMER_env: ignoreheading
+    :END:
+#+BEGIN_EXPORT latex
+\newcommand{\harriscredit}{
+  \begin{tikzpicture}[overlay]
+    \node [above left=1cm of current page.south east]
+      [font=\scriptsize,fill=gray!30,opacity=0.8, text width=3.5cm]
+      {With material by M.~Harris (Nvidia Corp.) };
+  \end{tikzpicture}
+}
+#+END_EXPORT
+
+*** Mapping Reduction to SIMD/GPU
+
+- Obvious: Want to use tree-based approach.
+- Problem: Two scales, Work group and Grid
+  - to occupy both to make good use of the machine.
+- In particular, need synchronization after each tree stage.
+- Solution: Use a two-scale algorithm.
+
+\includegraphics[viewport=0.5in 3in 9in 5.5in,clip=true,page=5,width=\textwidth]{./media/harris-reduction.pdf}
+
+/In particular:/ Use multiple grid invocations to achieve inter-workgroup synchronization.
+
+
+*** Map-Reduce
+
+Sounds like this:
+#+LATEX: {\Huge
+\begin{multline*}
+y =  f(\cdots f(f(g(x_1), g(x_2)), \\
+    g(x_3)), \dots ,g(x_N))
+\end{multline*}
+#+LATEX: }
+where $N$ is the input size.
+
+- Lisp naming, again
+- Mild generalization of reduction
+
+\begin{tikzpicture} [overlay]
+    \node [below left=1cm of current page.north east, draw,drop shadow,fill=white,
+    inner xsep=0.5cm,inner ysep=0.5cm,thick]
+    {
+      But no. Not even close.
+    } ;
+\end{tikzpicture}
+
+*** Map-Reduce: Graph
+#+BEGIN_CENTER
+\begin{tikzpicture}[grow'=up,level distance=1cm,
+    level 1/.style={sibling distance=4cm},
+    level 2/.style={sibling distance=2cm},
+    level 3/.style={sibling distance=1cm},
+    level 4/.style={level distance=2cm,},
+    every path/.style={func,<-},
+    gfunc/.style={<-,
+    edge from parent path={
+      (\tikzparentnode\tikzparentanchor) --
+      (\tikzchildnode\tikzchildanchor) node [left] {$g$}}
+    },
+    noarrow/.style={arrows=-,edge from parent path={}},
+    doarrow/.style={<-,
+    edge from parent path={
+      (\tikzparentnode\tikzparentanchor) --
+      (\tikzchildnode\tikzchildanchor) }
+    },
+    intermed/.style={input,fill=intermed},
+    ]
+    \node {}
+    child [noarrow] {
+    node [input,fill=output!60!input] {$y_1$}
+    child [doarrow] {
+      node [input,fill=output!40!input] {}
+      child { node [intermed] (sgx0) {} child [noarrow] { node [intermed] (gx0) {} child [gfunc] {node [input] {$x_0$} } } }
+      child { node [intermed] (sgx1) {} child [noarrow] { node [intermed] (gx1) {} child [gfunc] {node [input] {$x_1$} } } }
+    }
+    child [doarrow] {
+      node [input,fill=output!40!input] {}
+      child { node [intermed] (sgx2) {} child [noarrow] { node [intermed] (gx2) {} child [gfunc] {node [input] {$x_2$} } } }
+      child { node [intermed] (sgx3) {} child [noarrow] { node [intermed] (gx3) {} child [gfunc] {node [input] {$x_3$} } } }
+    }
+    }
+    child [noarrow] {
+    node [input,fill=output!60!input] {$y_2$}
+    child [doarrow] {
+      node [input,fill=output!40!input] {}
+      child { node [intermed] (sgx4) {} child [noarrow] { node [intermed] (gx4) {} child [gfunc] {node [input] {$x_4$} } } }
+      child { node [intermed] (sgx5) {} child [noarrow] { node [intermed] (gx5) {} child [gfunc] {node [input] {$x_5$} } } }
+    }
+    child [doarrow] {
+      node [input,fill=output!40!input] {}
+      child { node [intermed] (sgx6) {} child [noarrow] { node [intermed] (gx6) {} child [gfunc] {node [input] {$x_6$} } } }
+      child { node [intermed] (sgx7) {} child [noarrow] { node [intermed] (gx7) {} child [gfunc] {node [input] {$x_7$} } } }
+    }
+    }
+    ;
+    \draw [thick,->] (gx0) ..controls +(0,-7mm) and +(0,7mm).. (sgx4);
+    \draw [thick,->] (gx1) ..controls +(0,-7mm) and +(0,7mm).. (sgx7);
+    \draw [thick,->] (gx2) ..controls +(0,-7mm) and +(0,7mm).. (sgx1);
+    \draw [thick,->] (gx3) ..controls +(0,-7mm) and +(0,7mm).. (sgx2);
+    \draw [thick,->] (gx4) ..controls +(0,-7mm) and +(0,7mm).. (sgx0);
+    \draw [thick,->] (gx5) ..controls +(0,-7mm) and +(0,7mm).. (sgx6);
+    \draw [thick,->] (gx6) ..controls +(0,-7mm) and +(0,7mm).. (sgx3);
+    \draw [thick,->] (gx7) ..controls +(0,-7mm) and +(0,7mm).. (sgx5);
+\end{tikzpicture}
+
+#+END_CENTER
+
+*** Scan
+
+#+BEGIN_EXPORT latex
+{\Huge
+\vspace*{-1cm}
+\begin{align*}
+y_1 &= x_1 \\
+y_2 &= f(y_1, x_2)\\
+\vdots &= \vdots \\
+y_N &= f(y_{N-1}, x_N)
+\end{align*}}
+\vspace{-5mm}
+#+END_EXPORT
+where $N$ is the input size. (Think: $N$ large, $f(x,y)=x+y$)
+
+- Prefix Sum/Cumulative Sum
+- Abstract view of: loop-carried dependence
+- Also possible: Segmented Scan
+
+*** Scan: Graph
+
+#+BEGIN_CENTER
+\begin{tikzpicture}[
+    intermed/.style={input,fill=intermed},
+    ffunc/.style={func,
+    execute at end to={ node [left] {$f$}}
+    },
+    ]
+    \foreach \i in {0,1,...,5}
+    {
+    \node [input] at (\i, 0) (x\i) { $x_{\i}$ };
+    \node [output] at (\i, -6) (y\i) { $y_{\i}$ };
+    }
+    \foreach \i in {1,...,5}
+    {
+    \pgfmathtruncatemacro{\iminusone}{\i-1}
+    \node [intermed] at (\i, -\i) (m\i) { $y_{\i}$ };
+    \draw [func] (m\i) -- (y\i) node [pos=0.5,anchor=east] {Id};
+    \draw [func] (x\i) -- (m\i) ;
+    }
+    \foreach \i in {2,...,5}
+    {
+    \pgfmathtruncatemacro{\iminusone}{\i-1}
+    \draw [func] (m\iminusone) -- (m\i) ;
+    }
+    \draw [ffunc] (x0) -- (m1) ;
+    \draw [func] (x0) -- (y0) node [pos=0.5,anchor=east] {Id};
+\end{tikzpicture}
+#+END_CENTER
+
+\begin{tikzpicture} [overlay]
+    \node [below left=1cm of current page.north east, draw,drop shadow,fill=white,
+    text width=0.6\textwidth, inner xsep=0.5cm,inner ysep=0.5cm,thick]
+    {
+      Again: Need assumptions on $f$.\\
+      Associativity, commutativity.
+    } ;
+\end{tikzpicture}
+
+*** Scan: Implementation
+#+BEGIN_CENTER
+\begin{tikzpicture}[y=-1cm,scale=0.5]
+    \foreach \i in {0,...,4}
+    {
+    \pgfmathtruncatemacro{\pwr}{2^\i}
+    \pgfmathtruncatemacro{\nmpwr}{15-\pwr}
+    \foreach \j in {0,...,15}
+      \draw [fill=intermed,thick,draw] (\j,2*\i) rectangle +(1,1);
+    \ifthenelse{\equal{\i}{4}}{}{
+      \foreach \j in {\pwr,...,15}
+      \draw [func] (\j,2*\i) ++(0.5,1) -- ++(0,1);
+      \foreach \j in {0,...,\nmpwr}
+      \draw [func] (\j,2*\i) ++(0.5,1) -- ++(\pwr,1);
+    }
+    }
+\end{tikzpicture}
+#+END_CENTER
+
+\begin{tikzpicture} [overlay]
+    \node [above left=1cm of current page.south east, draw,drop shadow,fill=white,
+    inner xsep=0.5cm,inner ysep=0.5cm,thick]
+    {
+      Work-efficient?
+    } ;
+\end{tikzpicture}
+
+*** Scan: Implementation II
+
+**** Scan Impl Description                                         :B_column:
+     :PROPERTIES:
+     :BEAMER_col: 0.7
+     :END:
+
+Two sweeps: Upward, downward, both tree-shape
+
+\bigskip
+On upward sweep:
+
+- Get values =L= and =R= from left and right child
+- Save $L$ in local variable =Mine=
+- Compute =Tmp = L + R= and pass to parent
+
+On downward sweep:
+
+- Get value =Tmp= from parent
+- Send =Tmp= to left child
+- Sent =Tmp+Mine= to right child
+
+**** Scan Impl Graph                                               :B_column:
+     :PROPERTIES:
+     :BEAMER_col: 0.3
+     :END:
+
+\begin{tikzpicture}[
+grow=up,
+every node/.style={circle,fill=intermed,draw,thick, minimum width=0.4cm},
+every path/.style={func,<-},
+level distance=0.75cm,
+level 1/.style={sibling distance=1cm},
+level 2/.style={sibling distance=0.5cm},
+]
+\node {}
+child {
+    node {}
+    child { node {} }
+    child { node {} }
+}
+child {
+    node {}
+    child { node {} }
+    child { node {} }
+}
+;
+\end{tikzpicture}
+
+\begin{tikzpicture}[
+grow=down,
+every node/.style={circle,fill=intermed,draw,thick, minimum width=0.4cm},
+every path/.style={func,->},
+level distance=0.75cm,
+level 1/.style={sibling distance=1cm},
+level 2/.style={sibling distance=0.5cm},
+]
+\node {}
+child {
+    node {}
+    child { node {} }
+    child { node {} }
+}
+child {
+    node {}
+    child { node {} }
+    child { node {} }
+}
+;
+\end{tikzpicture}
+*** Scan: Examples
+
+Name examples of Prefix Sums/Scans:
+#+LATEX: \begin{hidden}[3cm]
+
+- Anything with a loop-carried dependence
+- One row of Gauss-Seidel
+- One row of triangular solve
+- Segment numbering if boundaries are known
+- Low-level building block for many higher-level algorithms algorithms, e.g. predicate filter, sort
+- FIR/IIR Filtering
+- [[http://www.cs.cmu.edu/~guyb/papers/Ble93.pdf][Blelloch `93]]
+#+LATEX: \end{hidden}
+
+*** Data-parallel language: Goals
+**Goal:** Design a full data-parallel programming language
+
+**Example:** What should the (asymptotic) execution time for Quicksort be?
+#+ATTR_LATEX: :width 0.6\textwidth
+[[./media/blelloch-quicksort.png]]
+#+LATEX: \begin{hidden}
+$O(log(N))$
+#+LATEX: \end{hidden}
+
+**Question:** What parallel primitive could be used to realize this?
+#+LATEX: \begin{hidden}
+- Segmented Scan, i.e. a scan with data-dep. boundaries
+- Any basic scan operation can be segmented while retaining
+#+LATEX: \end{hidden}
+
+[[http://www.cs.cmu.edu/afs/cs.cmu.edu/project/scandal/public/papers/CMU-CS-95-169.html][Blelloch `95]]
+
+*** NESL Example: String Search
+
+#+BEGIN_EXAMPLE
+teststr = "string  strap asop string" : [char]
+>>> candidates = [0:#teststr-5];
+candidates = [0, 1, 2, 3, .... : [int]
+>>> {a == `s: a in teststr -> candidates};
+it = [T, F, F, F, F, F, F, T, F, F....] : [bool]
+>>> candidates = {c in candidates;
+...       a in teststr -> candidates | a == `s};
+candidates = [0, 7, 13, 20, 24] : [int]
+>>> candidates = {c in candidates;
+...       a in teststr -> {candidates+1:candidates}
+...       | a == `t};
+#+END_EXAMPLE
+
+- Work and depth of this example?
+- NESL specifies work and depth for its constructs
+- How can scans be used to realize this?
+
+[[http://www.cs.cmu.edu/afs/cs.cmu.edu/project/scandal/public/papers/CMU-CS-95-169.html][Blelloch `95]]
+
+*** Array Languages
+
+**Idea:**
+- Operate on entire array at once
+- Inherently data-parallel
+
+Examples:
+
+- APL, numpy
+- Tensorflow (talk on Friday), Pytorch
+
+Important axes of distinction:
+- Lazy or eager
+- Imperative (with in-place modification) or pure/functional
+
+** TODO NOT THIS TIME
+*** TODO Internal Representations
+**** TODO SSA
+
+
+
+* Polyhedral Representation and Transformation
+  :PROPERTIES:
+  :RELATE_TREE_SECTION_NAME: poly
+  :RELATE_TREE_SECTION_OPENED: true
+  :END:
+** Polyhedral Model: What?
+*** Basic Object: Presburger Set
+Think of the **problem statement** here as representing an
+arbitrary-size (e.g.: dependency) graph.
+
+/Presburger sets/ correspond to a subset of predicate logic acting on
+tuples of integers.
+
+**Important:** Think of this as a mathematical tool that can be used
+in many settings.
+
+*** Basic Object: Presburger Set
+
+Terms:
+
+- Variables, Integer Constants
+- $+$, $-$
+- $\lfloor \cdot / d\rfloor$
+
+Predicates:
+- $\text{(Term)} \le \text{(Term)}$
+- $\text{(Pred)} \land \text{(Pred)}$,
+  $\text{(Pred)} \lor \text{(Pred)}$,
+  $\neg \text{(Pred)}$
+- $\exists v: \text{(Pred)}(v)$
+
+Sets: integer tuples for which a predicate is true
+
+[[http://labexcompilation.ens-lyon.fr/wp-content/uploads/2013/02/Sven-slides.pdf][Verdoolaege `13]]
+
+*** Presburger Sets: Reasoning
+What's "missing"? Why?
+#+LATEX: \begin{hidden}
+- Multiplication, Division
+- Most questions become undecidable in its presence
+#+LATEX: \end{hidden}
+
+Why is this called 'quasi-affine'?
+#+LATEX: \begin{hidden}
+- Affine: $\vec a\cdot \vec x+b$.
+- Quasi: inclusion of modulo/existential quantifier
+#+LATEX: \end{hidden}
+
+*** Presburger Sets: Reasoning
+
+What do the resulting sets have to do with polyhedra? When are they convex?
+#+LATEX: \begin{hidden}
+- Each constraint specifies a half-space
+- Intersection of half-spaces is a convex polyehdron
+- Unions can be used to make non-convex polyhedra
+#+LATEX: \end{hidden}
+
+Why polyhedra? Why not just rectangles?
+#+LATEX: \begin{hidden}
+- Rectangular domains are not closed under many transformations
+- E.g. strip-mining
+#+LATEX: \end{hidden}
+
+*** Demo: Constructing and Operating on Presburger Sets
+
+\demo{lang/Operating on Presburger Sets}
+
+*** Making Use of Presburger Sets
+
+- Loop Domains
+- Array Access Relations (e.g. write, read: per statement)
+- Schedules, with "lexicographic time"
+- Dependency graphs
+- (E.g. cache) interference graphs
+
+**Q:** Specify domain and range for the relations above.
+
+*** Example: Dependency Graph
+
+Given:
+- Write access relation $W$: Loop domain $\to$ array indices
+- Read access relation $R$
+- Schedule $S$ for statement $S_i$: Loop domain $D$ $\to$ lex. time of statement instance
+- Relation $\prec$: Lexicographic 'before'
+
+Find the dependency graph:
+#+LATEX: \begin{hidden}
+$D= ((W^{-1}\circ R) \cup (R^{-1}\circ W) \cup (W^{-1}\circ W)) \cap (S \prec S)$
+#+LATEX: \end{hidden}
+
+[[http://labexcompilation.ens-lyon.fr/wp-content/uploads/2013/02/Sven-slides.pdf][Verdoolaege `13]]
+
+*** Example: Last Instance
+
+Given:
+- Write access relation $W$: Loop domain $\to$ array indices
+- Read access relation $R$
+- Schedule $S$ for statement $S_i$: Loop domain $D$ $\to$ lex. time of statement instance
+- Relation $\prec$: Lexicographic 'before'
+
+Find the statement instances accessing array element:
+#+LATEX: \begin{hidden}
+$(R\cup W)^{-1}$
+#+LATEX: \end{hidden}
+
+Find the /last/ statement instance accessing array element:
+#+LATEX: \begin{hidden}
+$\operatorname{lexmax}((R\cup W)^{-1})$
+#+LATEX: \end{hidden}
+
+[[http://labexcompilation.ens-lyon.fr/wp-content/uploads/2013/02/Sven-slides.pdf][Verdoolaege `13]]
+
+*** Primitive Transformations (I)
+
+#+ATTR_LATEX: :width 0.8\textwidth
+[[./media/prim-transform-1.png]]
+
+[Aho/Ullman/Sethi `07]
+
+*** Primitive Transformations (II)
+
+#+ATTR_LATEX: :width 0.8\textwidth
+[[./media/prim-transform-2.png]]
+
+[Aho/Ullman/Sethi `07]
+
+*** Primitive Transformations (III)
+
+#+ATTR_LATEX: :width 0.8\textwidth
+[[./media/prim-transform-3.png]]
+
+[Aho/Ullman/Sethi `07]
+*** Primitive Transformations (IV)
+
+#+ATTR_LATEX: :width 0.8\textwidth
+[[./media/prim-transform-4.png]]
+
+[Aho/Ullman/Sethi `07]
+*** Example: Last Instance
+
+Given:
+- Dependency relation $D$
+
+Check whether a transformed schedule $S'$ is valid:
+#+LATEX: \begin{hidden}
+$\vec i \to \vec j \in D \Rightarrow S'(\vec i) \prec S'(\vec j)$
+#+LATEX: \end{hidden}
+
+*** A peek under the hood: Fourier-Motzkin Elimination
+
+INPUT: A polyhedron $S$ with variables $x1,\dots,x_n$
+
+OUTPUT: $x1,\dots,x_{n-1}$
+
+- Let $C$ be all the constraints in $S$ involving $x_n$.
+- For every pair of a lower and an upper bound on $x_m$ in $C$:
+  \begin{align*}
+      L &\le c_1 x_n,\\
+      &\le c_2 x_n \le U,\\
+  \end{align*}
+  create the new constraint $c_2L \le c_1 U$.
+- Divide by the GCD of $c_1$, $c_2$ if applicable.
+- If the new constraint is not satisfiable, $S$ was empty.
+- Let $S'=S \setminus C \cup \bigcup_{L,U} \{ c_2L \le c_1 U\}$.
+
+[Aho/Ullman/Sethi `07]
+
+**Q:** How can this help implement an emptiness check?
+
+* TODO Code Generation and Just-in-Time Compilation
+  :PROPERTIES:
+  :RELATE_TREE_SECTION_NAME: codegen
+  :RELATE_TREE_SECTION_OPENED: true
+  :END:
+** C as IR, LLVM IR
+** Caching Strategies
+** Constant Propagation and Run-time Typing
+
+* TODO General things to remember
+
+- Applications!
