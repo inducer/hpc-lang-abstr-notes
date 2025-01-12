@@ -337,34 +337,6 @@ High-level Sections:
 - Program Representation and Optimization Strategies
 - Code Generation/JIT
 
-*** Survey: Class Makeup
-
-- Compiler class: 11 no, 3 yes
-- HPC class: 10 yes, 4 no
-- C: very proficient on average
-- Python: proficient on average
-- Assembly: some have experience
-- GPU: Half the class has experience, some substantial
-- CPU perf: Very proficient
-- 10 PhD, 4 Masters, mostly CS (plus physics, CEE, MechSE)
-
-*** Survey: Learning Goals
-
-\tiny
-- How to use hardware efficiently to write fast code (1 response)
-- I want to learn about commonly encountered problems in HPC and efficient ways to approach and solve them. (1 response)
-- about writing high performance code for large scale problems. (1 response)
-- more (and more) about high-performance computing beyond parallel programming. (1 response)
-- This summer (while interning at Sandia national labs), I got familiar with GPU programming using Kokkos as the back end. I enjoyed this work immensely, and hope to continue learning about it, especially so that I can become better at writing GPU code myself. I am also interested in the relationship between a higher level abstraction (Kokkos), the compiler, and the actual compute device (GPU/CPU) relate together, and what tricks we have to help fix issues regarding this. For example, Kokkos uses a small amount of template metaprogramming to convert the source code into actual code. (1 response)
-- Some GPU stuff, course description sounded interesting for my research in HPC/Parallel Computing. Would be interesting to look at different programming models or abstractions for HPC. (1 response)
-- Getting better at doing high performance computing. (1 response)
-- become more familiar with abstractions (1 response)
-- I want to be able to auto generate performance portable C++ code, specifically for small batched tensor contractions. (1 response)
-- Languages and abstractions for high-performance scientific computing (1 response)
-- Investigating problems in high performance computing and looking for solutions, especially large-scale and using GPUs. (1 response)
-- Better ways to efficiently (in terms of human time) write high-performance code that may be useful to/readable by others (1 response)
-- about high-level languages and frameworks for high performance computing, the different interfaces they expose, compilation and runtime techniques they use, and the tradeoffs of these for an application developer. (1 response)
-
 ** Why Bother with Parallel Computers?
 *** Moore's Law
 
