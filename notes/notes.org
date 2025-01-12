@@ -1,7 +1,7 @@
 #+TITLE: Languages and Abstractions for High-Performance Scientific Computing
 #+SUBTITLE: CS598 APK
 #+AUTHOR: Andreas Kloeckner
-#+DATE: Fall 2018
+#+DATE: Spring 2025
 
 #+BEAMER_HEADER: \setbeamertemplate{navigation symbols}{}
 
@@ -81,7 +81,17 @@
 ** Notes
   :PROPERTIES:
   :RELATE_TREE_ICON: fa fa-book
-  :RELATE_TREE_LINK: https://andreask.cs.illinois.edu/cs598apk-f18/notes.pdf
+  :RELATE_TREE_LINK: https://andreask.cs.illinois.edu/cs598apk-s25/notes.pdf
+  :END:
+** Notes (unfilled, with empty boxes)
+  :PROPERTIES:
+  :RELATE_TREE_ICON: bi bi-book
+  :RELATE_TREE_LINK: https://andreask.cs.illinois.edu/cs598apk-s25/notes-empty.pdf
+  :END:
+** Notes (source code on Github)
+  :PROPERTIES:
+  :RELATE_TREE_ICON: bi bi-book
+  :RELATE_TREE_LINK: https://github.com/inducer/hpc-lang-abstr-notes
   :END:
 
 ** About This Class
@@ -167,7 +177,7 @@ OpenBLAS DGEMM code:
 *** Class web page
 
 #+BEGIN_CENTER
-[[https://bit.ly/hpcabstr-f18]]
+[[https://bit.ly/hpcabstr-s25]]
 #+END_CENTER
 
 contains:
