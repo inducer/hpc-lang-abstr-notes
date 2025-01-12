@@ -11,7 +11,7 @@ at the [University of Illinois](https://illinois.edu/).
 -   [PDF](https://andreask.cs.illinois.edu/cs598apk-s25/notes.pdf) of these slides/notes (see `notes`
     for source)
 
--   [Demos](https://mybinder.org/v2/gh/inducer/lang-abstr-notes/main?filepath=demos)
+-   [Demos](https://mybinder.org/v2/gh/inducer/hpc-lang-abstr-notes/main?filepath=demos)
     in [Binder](https://mybinder.org/)
 
 -   The demos use annotations for [`ipython-demo-tools`](https://github.com/inducer/ipython-demo-tools).
