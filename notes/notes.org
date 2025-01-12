@@ -1086,7 +1086,7 @@ What do you expect? [[[http://igoro.com/archive/gallery-of-processor-cache-effec
 #+ATTR_LATEX: :height 0.6\textheight
 [[./media/microbench/assoc-crop.pdf]]
 
-Color represents achieved bandwith:
+Color represents achieved bandwidth:
 - Red: high
 - Blue: low
 
@@ -1098,7 +1098,7 @@ Color represents achieved bandwith:
 
 *** Case Study: Streaming Workloads
 
-Q: Estimate epxected throughput for =saxpy= on an architecture with caches.
+Q: Estimate expected throughput for =saxpy= on an architecture with caches.
 What are the right units?
 \[
   z_i = \alpha x_i + y_i\quad(i=1,\dots,n)
@@ -1487,7 +1487,7 @@ Name tricky/slow aspects in terms of expressing SIMD:
 - Divergent control flow
   - Masking
   - Reconvergence
-- Indirect adressing: gather/scatter
+- Indirect addressing: gather/scatter
 #+LATEX: \end{hidden}
 
 x86 SIMD suffixes: What does the "=ps=" suffix mean? "=sd="?
@@ -2298,7 +2298,7 @@ What forms of communication exist at each scope?
 
 Can we just do locking like we might do on a CPU?
 #+LATEX: \begin{hidden}
-- Indepdendent forward progress of all threads is not guaranteed: no.
+- Independent forward progress of all threads is not guaranteed: no.
 
   (true until recently)
 
@@ -2820,7 +2820,7 @@ Downsides:
 
 SPIR-V:
 
-- Goal: Common intermediate represenation ("IR") for all GPU-facing code (Vulkan, OpenCL)
+- Goal: Common intermediate representation ("IR") for all GPU-facing code (Vulkan, OpenCL)
 - "Extended Instruction Sets":
   - General compute (OpenCL/CUDA) needs: pointers, special functions
 - Different from "SPIR" (tweaked LLVM IR)
@@ -2917,7 +2917,7 @@ Bottleneck is either
 
 Translate the bank analogy to computers:
 #+LATEX: \begin{hidden}
-- Revolving door: typicallly: Memory interface
+- Revolving door: typically: Memory interface
 - Revolving door throughput: Memory bandwidth [bytes/s]
 - Service desks: Functional units (e.g. floating point)
 - $P_{\text{peak}}$: Peak FU throughput (e.g.: [flops/s])
