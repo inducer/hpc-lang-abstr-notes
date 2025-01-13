@@ -80,7 +80,7 @@
   :END:
 ** Notes
   :PROPERTIES:
-  :RELATE_TREE_ICON: fa fa-book
+  :RELATE_TREE_ICON: bi bi-book
   :RELATE_TREE_LINK: https://andreask.cs.illinois.edu/cs598apk-s25/notes.pdf
   :END:
 ** Notes (unfilled, with empty boxes)
