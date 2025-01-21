@@ -154,11 +154,8 @@ Discussion:
 ({C}_{ij})_{i,j=1}^{m,n} = \sum_{k=1}^\ell A_{ik}B_{kj}
 \]
 
-Reference BLAS DGEMM code:
-[[https://github.com/Reference-LAPACK/lapack/blob/master/BLAS/SRC/dgemm.f]]
-
-OpenBLAS DGEMM code:
-[[https://github.com/xianyi/OpenBLAS/blob/develop/kernel/x86_64/dgemm_kernel_4x8_sandy.S]]
+- [[https://github.com/Reference-LAPACK/lapack/blob/447fd4e7844b81e62deff09b6b2f7961eecc7590/BLAS/SRC/dgemm.f][Reference BLAS DGEMM code]]
+- [[https://github.com/OpenMathLib/OpenBLAS/blob/76db346f7e55f149278c2d4bc0073a1c9eb1d598/kernel/x86_64/dgemm_kernel_4x8_haswell.S][OpenBLAS DGEMM code]]
 
 \medskip
 #+LATEX: \demo{intro/DGEMM Performance}
