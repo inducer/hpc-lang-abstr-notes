@@ -59,6 +59,8 @@
 #+BEAMER_HEADER: \end{frame}
 #+BEAMER_HEADER: }
 
+#+BIND: org-latex-src-block-backend listings
+
 # https://tex.stackexchange.com/questions/55058/accessing-the-current-overlay-number-in-beamer#55066
 #+BEAMER_HEADER: \makeatletter
 #+BEAMER_HEADER: \newcommand*{\overlaynumber}{\number\beamer@slideinframe}
