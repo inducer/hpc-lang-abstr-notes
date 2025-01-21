@@ -374,7 +374,7 @@ High-level Sections:
 *** Moore's Law
 
 #+ATTR_LATEX: :height 8cm
-[[./media/moores-law.pdf]]
+[[./media/transistor-count-over-time.png]]
 
 \begin{tikzpicture} [overlay]
     \node [above left=10mm of current page.south east,
