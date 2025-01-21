@@ -794,6 +794,14 @@ Q: Types of Pipeline Hazards? (aka: what can go wrong?)
 \medskip
 [David Kanter / Realworldtech.com]
 
+*** A Glimpse of a More Modern Processor: Golden Cove
+
+
+#+ATTR_LATEX: :height 0.6\textheight
+[[./media/golden-cove-block.png]]
+
+[Wikipedia \cc]
+
 *** Demo
 
 #+LATEX: \demo{intro/More Pipeline Mysteries}
