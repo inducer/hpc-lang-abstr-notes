@@ -274,7 +274,8 @@ Q: Give examples of the latter two.
 \medskip
 #+LATEX: \demo{intro/DGEMM Performance}
 
-#+LATEX: \demonote{Compare OpenBLAS on large square and small odd-shape matrices}
+- #+LATEX: \demonote{Compare OpenBLAS on large square and small odd-shape matrices}
+- #+LATEX: \demonote{Also consider DGEMV version}
 
 *** Do Libraries Stand a Chance? (in general)
 
