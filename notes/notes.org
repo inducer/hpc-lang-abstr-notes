@@ -23,7 +23,7 @@
 
 #+BEAMER_HEADER: \usepackage{pifont}
 #+BEAMER_HEADER: \usepackage[normalem]{ulem}
-#+BEAMER_HEADER: \def\classurl{https://relate.cs.illinois.edu/course/cs598apk-f18/}
+#+BEAMER_HEADER: \def\classurl{https://relate.cs.illinois.edu/course/cs598apk-s25/}
 #+BEAMER_HEADER: \def\activity#1{\href{\classurl/flow/#1/start}{Activity: #1}}
 #+BEAMER_HEADER: \def\demo#1{\href{\classurl/f/demos/upload/#1.html}{Demo: #1}}
 #+BEAMER_HEADER: \def\demonote#1{\ifshowhidden\medskip\par Demo Instructions: {\color{blue} #1}\fi}
@@ -195,7 +195,7 @@ contains:
 Please go to:
 
 #+BEGIN_CENTER
-[[https://bit.ly/hpcabstr-f18]]
+[[https://bit.ly/hpcabstr-s25]]
 #+END_CENTER
 
 and click on 'Start Activity'.
