@@ -432,24 +432,30 @@ High-level Sections:
 | *CPU*                  | *IPC* | *Year* |
 |------------------------+-------+--------|
 | Pentium 1              |   1.1 |   1993 |
-| Pentium MMX            |   1.2 |   1996 |
 | Pentium 3              |   1.9 |   1999 |
-| Pentium 4 (Willamette) |   1.5 |   2003 |
-| Pentium 4 (Northwood)  |   1.6 |   2003 |
-| Pentium 4 (Prescott)   |   1.8 |   2003 |
 | Pentium 4 (Gallatin)   |   1.9 |     20 |
 | Pentium D              |     2 |   2005 |
 | Pentium M              |   2.5 |   2003 |
 | Core 2                 |     3 |   2006 |
-| Sandy Bridge...        |  4ish |   2011 |
+| Sandy Bridge...        |    <4 |   2011 |
+| Skylake                |    <4 |   2015 |
+| Golden Cove            |    <6 |   2021 |
+| Lion Cove              |    <8 |   2024 |
 
-[Charlie Brej [[http://brej.org/blog/?p=15]]]
+# | Pentium MMX            |   1.2 |   1996 |
+# | Pentium 4 (Willamette) |   1.5 |   2003 |
+# | Pentium 4 (Northwood)  |   1.6 |   2003 |
+# | Pentium 4 (Prescott)   |   1.8 |   2003 |
+
+[Charlie Brej [[http://brej.org/blog/?p=15]], Wikipedia, Intel]
+
+Context: [[https://lemire.me/blog/2019/12/05/instructions-per-cycle-amd-versus-intel/][Lemire: simdjson achieved IPC, `19]]
 
 Discuss: How do we get out of this dilemma?
 
 *** The Performance Dilemma
 
-- IPC: Brick Wall
+- IPC: Brick-ish Wall
 - Clock Frequency: Brick Wall
 
 Ideas:
