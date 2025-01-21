@@ -757,7 +757,7 @@ Q: Types of Pipeline Hazards? (aka: what can go wrong?)
 
 *** Demo
 
-#+LATEX: \demo{intro/Pipeline Performance Mystery}
+#+LATEX: \demo{intro/Pipeline Performance Mysteries}
 
 #+LATEX: \begin{hidden}
 - a, a: elapsed time 3.83603 s
