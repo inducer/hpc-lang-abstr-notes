@@ -225,7 +225,7 @@ These notes (and the accompanying demos) are open-source!
 Bug reports and pull requests welcome: [[https://github.com/inducer/numerics-notes]]
 
 \bigskip
-Copyright (C) 2010-2013 Andreas Kloeckner
+Copyright (C) 2010-2013 Andreas Kloeckner\\
 Copyright (C) 2025 University of Illinois Board of Trustees
 
 \bigskip
