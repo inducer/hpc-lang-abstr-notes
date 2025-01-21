@@ -686,8 +686,6 @@ Things to know:
 - [[http://en.wikipedia.org/wiki/Call_stack][Call Stack]]: Stack frame, stack pointer, base pointer
 - [[http://en.wikipedia.org/wiki/Application_binary_interface][ABI]]: Calling conventions
 
-#+LATEX: \demonote{C $\to$ Assembly mapping from \url{https://github.com/ynh/cpp-to-assembly}}
-
 *** Demos
 
 #+LATEX: \demo{intro/Assembly Reading Comprehension}
@@ -700,11 +698,13 @@ Code to try:
 int main()
 {
   int y = 0, i;
-  for (i = 0; y < 10; ++i)
-    y += i;
+  for (i = 0; y < 100; ++i)
+    y += i*i;
   return y;
 }
 #+END_SRC
+
+Also try https://godbolt.org for direct source-to-assembly mapping
 
 ** Architecture of an Execution Pipeline
 
