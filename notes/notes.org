@@ -344,7 +344,7 @@ Show =l2dformta_qbx= from =pyfmmlib/vec_wrappers.f90=.
 *** Lies, Lies Everywhere
 
 - Semantics form a contract between programmer and language/environment
-- Within those bounds, the implementation is free to do as it chooses
+- Within those bounds, implementation has full freedom
 - True at every level:
   - Assembly
   - "High-level" language (C)
