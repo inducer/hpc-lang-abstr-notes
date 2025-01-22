@@ -68,6 +68,7 @@
 
 #+startup: beamer
 #+LATEX_CLASS: beamer
+#+LaTeX_CLASS_OPTIONS: [aspectratio=149]
 # (comment) +LaTeX_CLASS_OPTIONS: [bigger]
 
 #+LATEX_COMPILER: pdflatex
@@ -183,8 +184,7 @@ contains:
 - Class outline
 - Slides/demos/materials
 - Assignments
-- Virtual Machine Image
-- Piazza
+- Discussion Forum
 - Grading Policies
 - Video
 - HW1 (soon)
@@ -224,14 +224,14 @@ Four components:
 These notes (and the accompanying demos) are open-source!
 
 \bigskip
-Bug reports and pull requests welcome: [[https://github.com/inducer/numerics-notes]]
+Bug reports and pull requests welcome: [[https://github.com/inducer/hpc-lang-abstr-notes]]
 
 \bigskip
 Copyright (C) 2010-2013 Andreas Kloeckner\\
 Copyright (C) 2025 University of Illinois Board of Trustees
 
 \bigskip
-\scriptsize
+\tiny
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction, including without limitation the rights
@@ -276,8 +276,8 @@ Q: Give examples of the latter two.
 \medskip
 #+LATEX: \demo{intro/DGEMM Performance}
 
-- #+LATEX: \demonote{Compare OpenBLAS on large square and small odd-shape matrices}
-- #+LATEX: \demonote{Also consider DGEMV version}
+- \demonote{Compare OpenBLAS on large square and small odd-shape matrices}
+- \demonote{Also consider DGEMV version}
 
 *** Do Libraries Stand a Chance? (in general)
 
@@ -289,7 +289,7 @@ Q: Give examples of the latter two.
   #+LATEX: \end{hidden}
 
 - Saw: Three simple integer parameters suffice to lose 'good' performance
-  - Recent effort: "Batch BLAS" e.g. [[http://www.icl.utk.edu/files/publications/2017/icl-utk-1032-2017.pdf]]
+  - Recent efforts: e.g. [[http://www.icl.utk.edu/files/publications/2017/icl-utk-1032-2017.pdf][Batch BLAS]]
 
 - Separation of Concerns
 
@@ -299,9 +299,9 @@ Q: Give examples of the latter two.
 
   \smallskip
   #+LATEX: \begin{hidden}
-  Data locality $\rightarrow$ data should be traversed once,  $\partial_x$, $\partial_y$, $\partial_z$ computed together
+  Data locality: data should be traversed once,  $\partial_x$, $\partial_y$, $\partial_z$ computed together
 
-  Separation of concerns $\rightarrow$  each operator traverses the data separately.
+  Separation of concerns: each op. traverses data separately
   #+LATEX: \end{hidden}
 
 - Flexibility and composition
@@ -376,7 +376,7 @@ High-level Sections:
 ** Why Bother with Parallel Computers?
 *** Moore's Law
 
-#+ATTR_LATEX: :height 8cm
+#+ATTR_LATEX: :height 7cm
 [[./media/transistor-count-over-time.png]]
 
 \begin{tikzpicture} [overlay]
@@ -418,7 +418,7 @@ High-level Sections:
 
 *** MOSFETs: Scaling
 
-#+ATTR_LATEX: :width \textwidth
+#+ATTR_LATEX: :width 0.9\textwidth
 [[./media/mosfet-scaling.png]]
 
 [Intel Corp.]
@@ -745,7 +745,7 @@ So what exactly are Intel/ARM/AMD/Nvidia doing with the other *billions* of tran
 
 *** Hazards and Bubbles
 
-#+ATTR_LATEX: :height 5cm
+#+ATTR_LATEX: :height 4cm
 [[./media/pipeline-bubble.pdf]]
 
 Q: Types of Pipeline Hazards? (aka: what can go wrong?)
@@ -797,7 +797,7 @@ Q: Types of Pipeline Hazards? (aka: what can go wrong?)
 *** A Glimpse of a More Modern Processor: Golden Cove
 
 
-#+ATTR_LATEX: :height 0.6\textheight
+#+ATTR_LATEX: :height 0.8\textheight
 [[./media/golden-cove-block.png]]
 
 [Wikipedia \cc]
@@ -910,7 +910,7 @@ Flops are cheap
 Bandwidth is money
 
 Latency is physics
-- M. Hoemmen
+--- M. Hoemmen
 #+END_QUOTE
 
 Minor addition (but important for us)?
@@ -1119,8 +1119,18 @@ What do you expect? [[[http://igoro.com/archive/gallery-of-processor-cache-effec
 [[./media/microbench/assoc-crop.pdf]]
 
 Color represents achieved bandwidth:
-- Red: high
+- Yellow: high
 - Blue: low
+
+*** Experiments: 3. A Mystery: Results on Sandy Bridge
+
+#+ATTR_LATEX: :height 0.6\textheight
+[[./media/microbench/assoc-sandy-crop.pdf]]
+
+Color represents achieved bandwidth:
+- Yellow: high
+- Blue: low
+
 
 *** Thinking about the Memory Hierarchy
 
@@ -1205,8 +1215,7 @@ What hardware behavior might result from these aspects?
 
 *** Case study: Matrix-Matrix Mult. ('MMM') via Latency
 
-Come up with a simple cost model for MMM in a two-level hierarchy based
-on latency:
+Cost model for MMM in a two-level hierarchy based on latency?
 
 #+LATEX: \begin{hidden}[6cm]
 \vspace*{-7.5mm}
@@ -1233,8 +1242,7 @@ Calculation:
 
 *** Case study: Matrix-Matrix Mult. ('MMM') via Bandwidth
 
-Come up with a cost model for MMM in a two-level hierarchy based
-on bandwidth:
+Cost model for MMM in a two-level hierarchy based on bandwidth?
 
 #+LATEX: \begin{hidden}[6cm]
 - FMA throughput: $16 \times 2$ SP FMAs per clock (e.g.)
@@ -1516,11 +1524,11 @@ Find instructions.
 
 Name tricky/slow aspects in terms of expressing SIMD:
 #+LATEX: \begin{hidden}
-- Divergent control flow
-  - Masking
-  - Reconvergence
+- Divergent control flow, Masking,Reconvergence 
 - Indirect addressing: gather/scatter
 #+LATEX: \end{hidden}
+
+*** SIMD: Intel Instructions
 
 x86 SIMD suffixes: What does the "=ps=" suffix mean? "=sd="?
 #+LATEX: \begin{hidden}
@@ -1554,7 +1562,7 @@ How many cache lines should be/are in flight at one time?
 #+LATEX: \begin{hidden}[3cm]
 - $100 \text{ns} \cdot 50 \text{GB}/s=5000 \text{bytes}$
 - About 80 cache lines
-- Oops: Intel hardware can only handle about 10 pending requests per core at one time
+- Historic oops: Older Intel hardware could only handle about 10 pending requests per core at one time
 - $10\cdot 64 /100 \text{ns} \approx 6.4 \text{GB}/s$
 #+LATEX: \end{hidden}
 
@@ -1575,8 +1583,7 @@ Who decides on what core my code runs? How?
 #+LATEX: \begin{hidden}[3cm]
 - The OS scheduler: "Oh, hey, look! A free core!"
 - You, explicitly, by *pinning*:
-  - ~OMP_PLACES=cores~
-  - ~pthread_setaffinity_np()~
+  - ~OMP_PLACES=cores~, ~pthread_setaffinity_np()~ 
 #+LATEX: \end{hidden}
 Who decides on what NUMA node memory is allocated?
 #+LATEX: \begin{hidden}
@@ -1680,8 +1687,7 @@ every join/.style={},
 #+BEGIN_SRC c
 #include <stdatomic.h>
 _Bool atomic_compare_exchange_strong(
-      volatile A* obj,
-      C* expected, C desired );
+      volatile A* obj, C* expected, C desired );
 #+END_SRC
 
 What does =volatile= mean?
@@ -1691,7 +1697,7 @@ Memory may change at any time, do not keep in register.
 
 What does this do?
 #+LATEX: \begin{hidden}
-- Store ~(*obj == *expected) ? desired : *obj~ into ~*obj~.
+- ~(*obj == *expected) ? desired : *obj~ \to ~*obj~.
 - Return =true= iff memory contents was as =expected=.
 #+LATEX: \end{hidden}
 
@@ -2007,7 +2013,7 @@ What are the concrete impacts of doing these things?
 
 *** Chip Real Estate
 
-#+ATTR_LATEX: :height 7cm
+#+ATTR_LATEX: :height 6cm
 [[./media/isaiah_dieshot.jpg]]
 
 /Die floorplan:/ VIA Isaiah (2008).
@@ -2060,7 +2066,7 @@ What are the concrete impacts of doing these things?
 
 **** ALU cluster                                                   :B_column:
      :PROPERTIES:
-     :BEAMER_col: 0.5
+     :BEAMER_col: 0.4
      :END:
 
 #+BEGIN_EXPORT latex
@@ -2080,7 +2086,7 @@ What are the concrete impacts of doing these things?
 
 **** SIMD Ideas                                                    :B_column:
      :PROPERTIES:
-     :BEAMER_col: 0.5
+     :BEAMER_col: 0.4
      :END:
 
 **Idea #2: SIMD**
@@ -2742,7 +2748,7 @@ PCIe v2: 8 GB/s --- PCIe v3: 16 GB/s --- NVLink: 200 GB/s
 
 Bandwidth on device:
 #+LATEX: \begin{hidden}
-Registers: $\sim$10 TB/s --- Scratch: $\sim$10 TB/s --- Global: 500 GB/s
+Registers: \sim 10 TB/s --- Scratch: \sim 10 TB/s --- Global: 500 GB/s
 #+LATEX: \end{hidden}
 
 Flop throughput?
