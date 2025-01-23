@@ -4,6 +4,9 @@
 #+DATE: Spring 2025
 
 #+BEAMER_HEADER: \setbeamertemplate{navigation symbols}{}
+#+BEAMER_HEADER: \setbeamertemplate{footline}{%
+#+BEAMER_HEADER:     \raisebox{5pt}{\makebox[\paperwidth]{\hfill\makebox[20pt]{\color{gray}
+#+BEAMER_HEADER:           \scriptsize\insertframenumber}}}\hspace*{5pt}}
 
 # /!\ Requires global customization if used directly in emacs
 # (No action required if using ./make.sh)
