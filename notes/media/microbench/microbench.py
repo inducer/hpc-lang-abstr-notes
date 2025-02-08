@@ -8,20 +8,19 @@ from codepy.toolchain import guess_toolchain
 
 toolchain = guess_toolchain()
 
-from codepy.libraries import add_boost_python
+from codepy.libraries import add_pybind11
 
-add_boost_python(toolchain)
+add_pybind11(toolchain)
 
 
 MODULE_CODE = """
-#include <boost/scoped_array.hpp>
-#include <boost/python.hpp>
+#include <pybind11/pybind11.h>
 
 %s
 
-BOOST_PYTHON_MODULE(module)
+PYBIND11_MODULE(module, m)
 {
-  boost::python::def("go", &go);
+  m.def("go", &go);
 }
 """
 
