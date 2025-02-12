@@ -1231,7 +1231,7 @@ Cost model for MMM in a two-level hierarchy based on latency?
 \vspace*{-2ex}
 Assume: Working set fits in cache, No conflict misses
 
-Calculation:
+Calculation (for a single tile):
 - Total accesses: $4 N_B^3$ ($N_B$: block size)
 - Misses: $3 N_B^2$
 - Miss rate:
@@ -1263,16 +1263,16 @@ Cost model for MMM in a two-level hierarchy based on bandwidth?
 
 *Discussion:* What are the main simplifications in each model?
 #+LATEX: \begin{hidden}[4cm]
+Latency:
+- Concurrency/parallelism of memory accesses
+- Miss assumptions
+- (HW) prefetching
+
 Bandwidth:
 - Miss assumptions
 - Multiple cache levels
 - Latency effects
 
-Latency:
-- Miss assumptions
-- Concurrency/parallelism of memory accesses
-- (HW) prefetching
-- Machine Limits
 #+LATEX: \end{hidden}
 
 [[[https://doi.org/10.1145/1248377.1248394][Yotov et al. '07]]]
@@ -1555,16 +1555,16 @@ Example implementation aspects:
 ** Shared-Memory Multiprocessors
 *** Multiple Cores vs Bandwidth
 
-Assume (roughly right for Intel):
+Assume:
 
 - memory latency of 100 ns
-- peak DRAM bandwidth of 50 GB/s (per socket)
+- peak DRAM bandwidth of 100 GB/s (per socket)
 
 How many cache lines should be/are in flight at one time?
 
 #+LATEX: \begin{hidden}[3cm]
-- $100 \text{ns} \cdot 50 \text{GB}/s=5000 \text{bytes}$
-- About 80 cache lines
+- $100 \text{ns} \cdot 100 \text{GB}/s=10,000 \text{bytes}$
+- About 156 cache lines
 - Historic oops: Older Intel hardware could only handle about 10 pending requests per core at one time
 - $10\cdot 64 /100 \text{ns} \approx 6.4 \text{GB}/s$
 #+LATEX: \end{hidden}
@@ -1578,7 +1578,11 @@ How many cache lines should be/are in flight at one time?
 
 [SuperMicro Inc. `15]
 
-*Demo:* Show =lstopo= on porter, from [[https://github.com/open-mpi/hwloc][hwloc]].
+*Demo:*
+
+- Show =lstopo= on porter, from [[https://github.com/open-mpi/hwloc][hwloc]].
+
+- [[https://chipsandcheese.com/p/inside-the-amd-radeon-instinct-mi300as][=lstopo= on MI300]]
 
 *** Placement and Pinning
 
