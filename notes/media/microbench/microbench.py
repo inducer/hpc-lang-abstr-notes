@@ -77,54 +77,6 @@ def measure_strides():
     os.system("pdfcrop strides.pdf")
 
 
-def measure_strides_constant_work():
-    # came up during a discussion in s25
-    FUNC_CODE = """
-    int go(unsigned count, unsigned stride)
-    {
-      const unsigned array_size = 64 * 1024 * 1024;
-      int *ary = (int *) malloc(sizeof(int) * array_size);
-
-      for (unsigned it = 0; it < count * stride; ++it)
-      {
-        for (unsigned i = 0; i < array_size; i += stride)
-          ary[i] *= 17;
-      }
-
-      int result = 0;
-      for (unsigned i = 0; i < array_size; ++i)
-          result += ary[i];
-
-      free(ary);
-      return result;
-    }
-    """
-    from codepy.jit import extension_from_string
-
-    cmod = extension_from_string(toolchain, "module", MODULE_CODE % FUNC_CODE)
-
-    strides = []
-    times = []
-
-    count = 10
-    for stride in [2**i for i in range(0, 11)]:
-        start = time()
-        cmod.go(count, stride)
-        stop = time()
-
-        strides.append(stride)
-        times.append((stop - start) / count)
-
-    plt.clf()
-    plt.rc("font", size=20)
-    plt.semilogx(strides, times, "o-", base=2)
-    plt.xlabel("Stride")
-    plt.ylabel("Time [s]")
-    plt.grid()
-    plt.tight_layout()
-    plt.show()
-
-
 def measure_cache_bandwidths():
     FUNC_CODE = """
     int go(unsigned array_size, unsigned steps)
