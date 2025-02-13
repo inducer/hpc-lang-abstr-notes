@@ -1216,6 +1216,53 @@ What hardware behavior might result from these aspects?
 - Provide enough concurrency: SIMD, ILP, Core
 #+LATEX: \end{hidden}
 
+*** Case study: Matrix-Matrix Mult. ('MMM'): Code Structure
+
+**** MMM Figure
+     :PROPERTIES:
+     :BEAMER_col: 0.4
+     :END:
+\begin{tikzpicture}
+\draw (0,0) coordinate (A) rectangle ++(2,2) node [pos=0.3] {$A$};
+\draw (2,2) coordinate (B) rectangle ++(2,2) node [pos=0.3] {$B$};
+\draw (2,0) coordinate (C) rectangle ++(2,2) node [pos=0.3] {$A\cdot B$};
+\ifshowhidden
+\draw [dashed] (0,1) -- ++(4,0);
+\draw [dashed] (B) ++(1,2) -- ++(0,-4);
+\draw [dashed] (A) ++(1,0) -- ++(0,2);
+\draw [dashed] (B) ++(0,1) -- ++(2,0);
+\fi
+\end{tikzpicture}
+
+**** Answers                                                       :B_column:
+     :PROPERTIES:
+     :BEAMER_col: 0.6
+     :END:
+\footnotesize
+#+BEGIN_SRC c
+for (i)
+  for (j)
+    for (k)
+      c[i,j] += a[i,k]*b[k,j]
+#+END_SRC
+
+After:
+#+BEGIN_SRC c
+for (itile)
+  for (jtile)
+    for (ktile)
+      for (iinner)
+        for (jinner)
+          for (kinner)
+            c[itile*NB+iinner,...]
+              += ...
+#+END_SRC
+
+\normalsize
+How many tiles?
+#+LATEX: \begin{hidden}[1cm]
+$(N/N_B)^3$
+#+LATEX: \end{hidden}
 *** Case study: Matrix-Matrix Mult. ('MMM') via Latency
 
 Cost model for MMM in a two-level hierarchy based on latency?
@@ -1278,7 +1325,7 @@ Bandwidth:
 [[[https://doi.org/10.1145/1248377.1248394][Yotov et al. '07]]]
 
 \medskip
-*General Q:* How can we analyze cache cost of algorithms in general?
+*Q:* How can we analyze cache cost of algorithms in general?
 
 *** Hong/Kung: Red/Blue Pebble Game
 Simple means of I/O cost analysis: "Red/blue pebble game"
@@ -1288,7 +1335,19 @@ Simple means of I/O cost analysis: "Red/blue pebble game"
 - "Blue Cool" pebbles: data that is stored, but not available for computation
   without I/O
 
+Game Setup:
+- Place blue pebbles on inputs
+
+One 'turn':
+- Swap red \to blue or blue \to red
+- Place red pebble on successor if all predecessors have red
+- Remove any pebble
+
 *Note:* Can allow "Red/Purple/Blue/Black": more levels
+
+[[[https://doi.org/10.1145/800076.802486][Hong/Kung `81]]]
+
+*** Hong/Kung: Red/Blue Pebble Game
 
 \medskip
 Q: What are the cost metrics in this model?
@@ -1298,7 +1357,11 @@ Q: What are the cost metrics in this model?
 - Number of red pebbles (corresponding to size of 'near' storage)
 #+LATEX: \end{hidden}
 
-[[[https://doi.org/10.1145/800076.802486][Hong/Kung `81]]]
+What does a Hong/Kung lower bound for Matrix-Matrix look like?
+#+LATEX: \begin{hidden}
+\[\text{\# turns} \cdot \sqrt{\text{\#red pebbles}} = \Omega(N^3)\]
+#+LATEX: \end{hidden}
+
 
 *** Cache-Oblivious Algorithms
 
@@ -1321,14 +1384,17 @@ starting with registers.
 
 *** Cache-Oblivious Algorithms: Issues
 
+Observed results?
+#+LATEX: \begin{hidden}[5cm]
+- 1% of peak if used all the way to scalar level
+- With good base case: 30-60% of peak
+#+LATEX: \end{hidden}
+
 What are potential issues on actual hardware?
 #+LATEX: \begin{hidden}[5cm]
-- In pure form:
-  - Function call overhead
-  - Register allocation
-- With good base case:
-  - I-cache overflow
-  - Instruction scheduling
+- Function call overhead
+- Not conducive to prefetching
+- Too many levels: 1-ish level may suffice
 #+LATEX: \end{hidden}
 
 [[[https://doi.org/10.1145/1248377.1248394][Yotov et al. '07]]]
@@ -1380,6 +1446,7 @@ To machine granularities:
 - Natural word size
 - Vector size
 - Cache line
+- Memory page
 #+LATEX: \end{hidden}
 
 Q: What is the performance impact of misalignment?
@@ -1525,10 +1592,11 @@ Find instructions.
 - Reductions ("horizontal")
 #+LATEX: \end{hidden}
 
-Name tricky/slow aspects in terms of expressing SIMD:
+Name tricky/inefficient aspects in terms of expressing SIMD:
 #+LATEX: \begin{hidden}
 - Divergent control flow, Masking,Reconvergence 
 - Indirect addressing: gather/scatter
+- Thought experiment: SIMD recursion possible?
 #+LATEX: \end{hidden}
 
 *** SIMD: Intel Instructions
