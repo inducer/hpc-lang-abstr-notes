@@ -1688,6 +1688,8 @@ How is cache coherence implemented?
 - Protocols, operating on cache line states (e.g. "[[https://en.wikipedia.org/wiki/MESI_protocol][MESI]]")
 #+LATEX: \end{hidden}
 
+[[https://www.scss.tcd.ie/Jeremy.Jones/vivio/caches/MESI.htm][Cache coherence simulation]]
+
 What are the performance impacts?
 
 - \demo{intro/Threads vs Cache}
