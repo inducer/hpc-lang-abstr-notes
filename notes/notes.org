@@ -1585,7 +1585,7 @@ Typically characterized by width of data path:
 *** SIMD: Architectural Issues
 
 Realization of inter-lane comm. in SIMD?
-Find instructions.
+Find instructions. ([[https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html][Intel Intrinsics Guide]])
 #+LATEX: \begin{hidden}
 - Misaligned stores/loads? (no)
 - Broadcast, Unpack+Interleave, Shuffle, Permute
@@ -1599,7 +1599,7 @@ Name tricky/inefficient aspects in terms of expressing SIMD:
 - Thought experiment: SIMD recursion possible?
 #+LATEX: \end{hidden}
 
-*** SIMD: Intel Instructions
+*** SIMD: Intel Instructions :noexport:
 
 x86 SIMD suffixes: What does the "=ps=" suffix mean? "=sd="?
 #+LATEX: \begin{hidden}
