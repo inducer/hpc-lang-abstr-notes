@@ -1695,6 +1695,27 @@ What are the performance impacts?
 - \demo{intro/Threads vs Cache}
 - \demo{intro/Lock Contention}
 
+*** MESI Sequence to Try
+
+#+LATEX: \begin{hidden}[8cm]
+- CPU0: read a0 	
+- CPU0: read a0 	
+- CPU0: write a0 	
+- CPU0: write a0 	
+- CPU1: read a0 
+- CPU1: write a0
+- CPU1: write a0 	
+- CPU0: write a0
+- CPU0: write a2 	
+- CPU0: write a0 	
+#+LATEX: \end{hidden}
+
+Simplifications in the model?
+
+#+LATEX: \begin{hidden}[1cm]
+- Access size = cache line size
+- But: write performs read
+#+LATEX: \end{hidden}[8cm]
 *** 'Conventional' vs Atomic Memory Update
 
 \begin{center}
@@ -1851,6 +1872,16 @@ void sem_up(naive_s_t *s) {
 
 [[[https://stackoverflow.com/a/36097001][Cordes `16]]] --- Hardware implementation: how?
 
+*** Memory ordering semantics
+
+#+LATEX: \begin{hidden}[5cm]
+- =mo_relaxed=
+- =mo_consume=: no r/w reorder /before/ in this thread, /data-dependent/ releasing writes elsewhere visible (often: compiler only)
+- =mo_acquire=: no r/w reorder /before/ in this thread, /all/ releasing writes elsewhere visible
+- =mo_release=: no r/w reorder /after/ inthis thread, /all/ writes here visible elsewhere if they acquire the written var
+- =mo_acq_rel=
+- =mo_seq_cst=: =mo_acq_rel= plus a single total order exists (~store queue flush on x86)
+#+LATEX: \end{hidden}
 *** C: What is 'order'?
 
 [[http://www.open-std.org/jtc1/sc22/wg14/www/docs/n1548.pdf#page=32][C11 Committee Draft, December `10, Sec. 5.1.2.3, "Program execution"]]:
