@@ -14,10 +14,22 @@
 
 #+BEAMER_HEADER: \usepackage{environ}
 #+BEAMER_HEADER: \usepackage{tcolorbox}
+#+BEAMER_HEADER: \tcbuselibrary{skins}
 #+BEAMER_HEADER: \newif\ifshowhidden
+#+BEAMER_HEADER: \newif\ifshowlater
 #+BEAMER_HEADER: \showhiddentrue
+#+BEAMER_HEADER: \showlatertrue
 #+BEAMER_HEADER: \def\fillinbox#1{\begin{tcolorbox}[height=#1]\end{tcolorbox}}
-#+BEAMER_HEADER: \NewEnviron{hidden}[1][1.5cm]{\ifshowhidden\begin{tcolorbox}\BODY\end{tcolorbox}\else\fillinbox{#1}\fi}
+#+BEAMER_HEADER: \NewEnviron{hidden}[0]{\begin{tcolorbox}\ifshowhidden\BODY\else\phantom{\vbox{\BODY}}\vspace*{-1.25ex}\fi\end{tcolorbox}}
+#+BEAMER_HEADER: \NewEnviron{showlater}[0]{\begin{tcolorbox}[enhanced,frame hidden,colback=blue!5!white,borderline={1pt}{0pt}{blue,dashed}]%
+#+BEAMER_HEADER: \ifshowhidden\BODY\else%
+#+BEAMER_HEADER:   \ifshowlater%
+#+BEAMER_HEADER:     \uncover<2>{\BODY}\vspace*{-1.25ex}%
+#+BEAMER_HEADER:   \else%
+#+BEAMER_HEADER:     \phantom{\vbox{\BODY}}\vspace*{-1.25ex}%
+#+BEAMER_HEADER:   \fi%
+#+BEAMER_HEADER: \fi%
+#+BEAMER_HEADER: \end{tcolorbox}}
 
 #+BEAMER_HEADER: \let\plainhref=\href
 #+BEAMER_HEADER: \let\plainurl=\url
@@ -1149,7 +1161,7 @@ What are the right units?
   z_i = \alpha x_i + y_i\quad(i=1,\dots,n)
 \]
 
-#+LATEX: \begin{hidden}[5cm]
+#+LATEX: \begin{hidden}
 - Units: GBytes/s
 - Net memory accessed: $n\times 4 \times 3$ bytes
 - Actual memory accessed: $n\times 4 \times 4$ bytes
@@ -1210,7 +1222,7 @@ What hardware behavior might result from these aspects?
      :BEAMER_col: 0.6
      :END:
 
-#+LATEX: \begin{hidden}[5cm]
+#+LATEX: \begin{hidden}
 - Sources of concurrency: row, column loop, summation loop (?)
 - Working set: artificially created blocks
 - Provide enough concurrency: SIMD, ILP, Core
@@ -1260,14 +1272,14 @@ for (itile)
 
 \normalsize
 How many tiles?
-#+LATEX: \begin{hidden}[1cm]
+#+LATEX: \begin{hidden}
 $(N/N_B)^3$
 #+LATEX: \end{hidden}
 *** Case study: Matrix-Matrix Mult. ('MMM') via Latency
 
 Cost model for MMM in a two-level hierarchy based on latency?
 
-#+LATEX: \begin{hidden}[6cm]
+#+LATEX: \begin{hidden}
 \vspace*{-7.5mm}
 \begin{multline*}
   \text{Avg latency per access} = \\
@@ -1294,7 +1306,7 @@ Calculation (for a single tile):
 
 Cost model for MMM in a two-level hierarchy based on bandwidth?
 
-#+LATEX: \begin{hidden}[6cm]
+#+LATEX: \begin{hidden}
 - FMA throughput: $16 \times 2$ SP FMAs per clock (e.g.)
 
 - Cycle count: $2N^3 / (2\cdot 32)=N^3/32$
@@ -1309,7 +1321,7 @@ Cost model for MMM in a two-level hierarchy based on bandwidth?
 *** Case study: Matrix-Matrix Mult. ('MMM'): Discussion
 
 *Discussion:* What are the main simplifications in each model?
-#+LATEX: \begin{hidden}[4cm]
+#+LATEX: \begin{hidden}
 Latency:
 - Concurrency/parallelism of memory accesses
 - Miss assumptions
@@ -1385,13 +1397,13 @@ starting with registers.
 *** Cache-Oblivious Algorithms: Issues
 
 Observed results?
-#+LATEX: \begin{hidden}[5cm]
+#+LATEX: \begin{hidden}
 - 1% of peak if used all the way to scalar level
 - With good base case: 30-60% of peak
 #+LATEX: \end{hidden}
 
 What are potential issues on actual hardware?
-#+LATEX: \begin{hidden}[5cm]
+#+LATEX: \begin{hidden}
 - Function call overhead
 - Not conducive to prefetching
 - Too many levels: 1-ish level may suffice
@@ -1406,7 +1418,7 @@ Classical Analysis of Algorithms (e.g.):
   \text{Cost}(n) = O(n^3).
 \]
 Precise meaning? Anything missing from that statement?
-#+LATEX: \begin{hidden}[3cm]
+#+LATEX: \begin{hidden}
 *Missing:* `as $n\to\infty$'
 
 \medskip
@@ -1630,7 +1642,7 @@ Assume:
 
 How many cache lines should be/are in flight at one time?
 
-#+LATEX: \begin{hidden}[3cm]
+#+LATEX: \begin{hidden}
 - $100 \text{ns} \cdot 100 \text{GB}/s=10,000 \text{bytes}$
 - About 156 cache lines
 - Historic oops: Older Intel hardware could only handle about 10 pending requests per core at one time
@@ -1655,7 +1667,7 @@ How many cache lines should be/are in flight at one time?
 *** Placement and Pinning
 
 Who decides on what core my code runs? How?
-#+LATEX: \begin{hidden}[3cm]
+#+LATEX: \begin{hidden}
 - The OS scheduler: "Oh, hey, look! A free core!"
 - You, explicitly, by *pinning*:
   - ~OMP_PLACES=cores~, ~pthread_setaffinity_np()~ 
@@ -1677,13 +1689,13 @@ Latency (but it impacts bandwidth by way of queuing)
 *** Cache Coherence
 
 What is /cache coherence/?
-#+LATEX: \begin{hidden}[2cm]
+#+LATEX: \begin{hidden}
 - As soon as you make a copy of (cache) something, you risk inconsistency with the original
 - A set of guarantees on how (and in what order) changes to memory become visible to other cores
 #+LATEX: \end{hidden}
 
 How is cache coherence implemented?
-#+LATEX: \begin{hidden}[2cm]
+#+LATEX: \begin{hidden}
 - Snooping
 - Protocols, operating on cache line states (e.g. "[[https://en.wikipedia.org/wiki/MESI_protocol][MESI]]")
 #+LATEX: \end{hidden}
@@ -1697,7 +1709,7 @@ What are the performance impacts?
 
 *** MESI Sequence to Try
 
-#+LATEX: \begin{hidden}[8cm]
+#+LATEX: \begin{hidden}
 - CPU0: read a0 	
 - CPU0: read a0 	
 - CPU0: write a0 	
@@ -1712,7 +1724,7 @@ What are the performance impacts?
 
 Simplifications in the model?
 
-#+LATEX: \begin{hidden}[1cm]
+#+LATEX: \begin{hidden}
 - Access size = cache line size
 - But: write performs read
 #+LATEX: \end{hidden}[8cm]
@@ -1814,14 +1826,14 @@ Why is Memory Ordering a Problem?
 
 What's the purpose of different memory orders?
 
-#+LATEX: \begin{hidden}[4cm]
+#+LATEX: \begin{hidden}
 - Atomicity itself is unaffected
 - Makes sure that 'and then' is meaningful
 #+LATEX: \end{hidden}
 
 *** Memory ordering semantics
 
-#+LATEX: \begin{hidden}[5cm]
+#+LATEX: \begin{hidden}
 - =mo_relaxed=
 - =mo_consume=: no r/w reorder /before/ in this thread, /data-dependent/ releasing writes elsewhere visible (often: compiler only)
 - =mo_acquire=: no r/w reorder /before/ in this thread, /all/ releasing writes elsewhere visible
@@ -1949,7 +1961,7 @@ Why is this so subtle?
 *** Arrays
 
 Why are *arrays* the dominant data structure in high-performance code?
-#+LATEX: \begin{hidden}[3cm]
+#+LATEX: \begin{hidden}
 - Performance is mostly achieved with /regular/, /structured/ code (e.g. SIMD, rectangular loops)
 - Arrays are a natural fit for that type of code
 - Abstractions of linear algebra map directly onto arrays
@@ -1966,7 +1978,7 @@ Any comments on C's arrays?
 *** Arrays vs Abstraction
 Arrays-of-Structures or Structures-of-Arrays? What's the difference? Give an example.
 
-#+LATEX: \begin{hidden}[3cm]
+#+LATEX: \begin{hidden}
 - Example: Array of XYZ coordinates:
   - XYZXYZXYZ...
   - XXX....YYY...ZZZ...
@@ -1975,7 +1987,7 @@ Arrays-of-Structures or Structures-of-Arrays? What's the difference? Give an exa
 #+LATEX: \end{hidden}
 
 Language aspects of the distinction? Salient example?
-#+LATEX: \begin{hidden}[2cm]
+#+LATEX: \begin{hidden}
 - C ~struct~ forces you into arrays-of-structures
   - AoS: more "conceptually sound"
   - SoA: better for performance
@@ -2006,7 +2018,7 @@ struct ary {
 
 Name language mechanisms for SIMD:
 
-#+LATEX: \begin{hidden}[3cm]
+#+LATEX: \begin{hidden}
 - Inline Assembly
 - Intrinsics
 - Vector Types
@@ -2056,7 +2068,7 @@ What is /constructive interference/?
 *** Alignment: Why?
 
 What is the concrete impact of the constructs on the previous slide?
-#+LATEX: \begin{hidden}[4cm]
+#+LATEX: \begin{hidden}
 - Compiler needs to /know/ whether data is aligned
   - Generate the correct instructions (which encode alignment promises)
   - Stack-allocate memory of the correct alignment
@@ -2812,7 +2824,7 @@ Unit stride, just like on the CPU
 *** Timing GPU Work
 
 How do you find the execution time of a GPU kernel?
-#+LATEX: \begin{hidden}[3cm]
+#+LATEX: \begin{hidden}
 - Do a few 'warm-up' calls to the kernel
 - Drain the queue
 - Start the timer
@@ -2912,7 +2924,7 @@ What can we expect from future processor architectures?
 *** Common Challenges
 
 What are the common challenges encountered by both CPUs and GPUs?
-#+LATEX: \begin{hidden}[3cm]
+#+LATEX: \begin{hidden}
 - Dealing with Latency (ILP/SMT/Caches)
 - Exposing concurrency
 - Expose a coherent model for talking to SIMD
@@ -3030,7 +3042,7 @@ What situations can arise at /steady-state/?
 
 What numbers do we need to characterize performance of this system?
 
-#+LATEX: \begin{hidden}[3cm]
+#+LATEX: \begin{hidden}
 - $P_{\text{peak}}$: [task/sec] Peak throughput of the service desks
 - $I$: [tasks/customer] Intensity
 - $b$: [customers/sec] Throughput of the revolving door
@@ -3107,7 +3119,7 @@ for (i=0; i<N; ++i)
 
 Find the parameters and make a prediction.
 
-#+LATEX: \begin{hidden}[3cm]
+#+LATEX: \begin{hidden}
 Machine model:
 - Memory Bandwidth: e.g. $b=10$ GB/s
 - $P_{\text{peak}}$: e.g. 4 GF/s
@@ -3155,7 +3167,7 @@ Streaming stores, remember?
 *** Calibrating the Model: Peak Throughput
 
 Name aspects that should/could be factored in when determining peak performance:
-#+LATEX: \begin{hidden}[5cm]
+#+LATEX: \begin{hidden}
 - Types of operation (FMA? Or only adds?)
 - SIMD
 - Pipeline utilization / operation latency
@@ -3211,7 +3223,7 @@ Important to remember:
 Develop a model of /throughput/ $X(N)$ for a given load $N$, assuming
 execution resources scale with $N$.
 
-#+LATEX: \begin{hidden}[5cm]
+#+LATEX: \begin{hidden}
 
 \[ X(N)=\frac{\gamma N}{1+\alpha \cdot (N-1)+\beta N\cdot (N-1)} \]
 
@@ -3240,7 +3252,7 @@ How can one combine multiple performance measurements? (e.g. "average speedup"?)
 | Program 1          |            1 |           10 |           20 |
 | Program 2          |         1000 |          100 |           20 |
 
-#+LATEX: \begin{hidden}[5cm]
+#+LATEX: \begin{hidden}
 |                 | *Computer A* | *Computer B* | *Computer C* |
 |-----------------+--------------+--------------+--------------|
 | Arithmetic mean |        500.5 |           55 |           20 |
@@ -3254,7 +3266,7 @@ How can one combine multiple performance measurements? (e.g. "average speedup"?)
 | Arithmetic mean |        500.5 |           55 |           20 |
 | Geometric mean  |       31.622 |       31.622 |           20 |
 
-#+LATEX: \begin{hidden}[5cm]
+#+LATEX: \begin{hidden}
 - Depending on normalization, the arithmetic mean will produce
   an arbitrary ranking
 - Geometric mean $\sqrt[n]{a_1\cdots a_n}$: consistent ranking
@@ -3272,7 +3284,7 @@ Take-home message:
 
 What are potential issues in timing experiments? (What can you do about them?)
 
-#+LATEX: \begin{hidden}[5cm]
+#+LATEX: \begin{hidden}
 - Warm-up effects (do a few runs before timing to only time steady state)
 - Timing noise
   - Know your timer granularity
@@ -3287,7 +3299,7 @@ What are potential issues in timing experiments? (What can you do about them?)
 *** Timing Experiments: Pitfalls (part 2)
 
 What are potential issues in timing experiments? (What can you do about them?)
-#+LATEX: \begin{hidden}[5cm]
+#+LATEX: \begin{hidden}
 - NUMA placement (use =numactl=, =libnuma=, or respect first-touch)
 - Thread migration between cores (and resulting cache effects)
   - Pin your threads to cores
@@ -3357,7 +3369,7 @@ Basic examples:
 
 Architectural examples:
 
-#+LATEX: \begin{hidden}[3cm]
+#+LATEX: \begin{hidden}
 - instructions / cycles
 - L1-dcache-load-misses / instructions
 - LLC-load-misses / instructions
@@ -3366,7 +3378,7 @@ Architectural examples:
 #+LATEX: \end{hidden}
 
 Issue with 'instructions' as a metric?
-#+LATEX: \begin{hidden}[1cm]
+#+LATEX: \begin{hidden}
 May or may not correlate with 'amount of useful work'
 #+LATEX: \end{hidden}
 
@@ -3906,7 +3918,7 @@ child {
 *** Scan: Examples
 
 Name examples of Prefix Sums/Scans:
-#+LATEX: \begin{hidden}[3cm]
+#+LATEX: \begin{hidden}
 
 - Anything with a loop-carried dependence
 - One row of Gauss-Seidel
