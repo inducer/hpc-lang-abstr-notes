@@ -1812,17 +1812,22 @@ Why is Memory Ordering a Problem?
 - Compilers reorder memory operations
 #+LATEX: \end{hidden}
 
-What are the different memory orders and what do they mean?
+What's the purpose of different memory orders?
 
 #+LATEX: \begin{hidden}[4cm]
 - Atomicity itself is unaffected
 - Makes sure that 'and then' is meaningful
+#+LATEX: \end{hidden}
 
-Types:
-- Sequentially consistent: no reordering
-- Acquire: later loads may not reorder across
-- Release: earlier writes may not reorder across
-- Relaxed: reordering OK
+*** Memory ordering semantics
+
+#+LATEX: \begin{hidden}[5cm]
+- =mo_relaxed=
+- =mo_consume=: no r/w reorder /before/ in this thread, /data-dependent/ releasing writes elsewhere visible (often: compiler only)
+- =mo_acquire=: no r/w reorder /before/ in this thread, /all/ releasing writes elsewhere visible
+- =mo_release=: no r/w reorder /after/ inthis thread, /all/ writes here visible elsewhere if they acquire the written var
+- =mo_acq_rel=
+- =mo_seq_cst=: =mo_acq_rel= plus a single total order exists (~store queue flush on x86)
 #+LATEX: \end{hidden}
 
 *** Example: A Semaphore With Atomics
@@ -1872,16 +1877,6 @@ void sem_up(naive_s_t *s) {
 
 [[[https://stackoverflow.com/a/36097001][Cordes `16]]] --- Hardware implementation: how?
 
-*** Memory ordering semantics
-
-#+LATEX: \begin{hidden}[5cm]
-- =mo_relaxed=
-- =mo_consume=: no r/w reorder /before/ in this thread, /data-dependent/ releasing writes elsewhere visible (often: compiler only)
-- =mo_acquire=: no r/w reorder /before/ in this thread, /all/ releasing writes elsewhere visible
-- =mo_release=: no r/w reorder /after/ inthis thread, /all/ writes here visible elsewhere if they acquire the written var
-- =mo_acq_rel=
-- =mo_seq_cst=: =mo_acq_rel= plus a single total order exists (~store queue flush on x86)
-#+LATEX: \end{hidden}
 *** C: What is 'order'?
 
 [[http://www.open-std.org/jtc1/sc22/wg14/www/docs/n1548.pdf#page=32][C11 Committee Draft, December `10, Sec. 5.1.2.3, "Program execution"]]:
