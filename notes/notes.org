@@ -1971,7 +1971,7 @@ Any comments on C's arrays?
 #+LATEX: \begin{hidden}
 - 1D arrays: fine, no surprises
 - \(n\)D arrays: basically useless: sizes baked into types
-  - Interestinglly: Fortran is (incrementally) smarter
+  - Interestingly: Fortran is (incrementally) smarter
 #+LATEX: \end{hidden}
 
 
