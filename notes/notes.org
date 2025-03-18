@@ -1976,7 +1976,7 @@ Any comments on C's arrays?
 
 
 *** Arrays vs Abstraction
-Arrays-of-Structures or Structures-of-Arrays? What's the difference? Give an example.
+Arrays-of-Structures or Structures-of-Arrays? Give an example.
 
 #+LATEX: \begin{hidden}
 - Example: Array of XYZ coordinates:
@@ -1989,9 +1989,8 @@ Arrays-of-Structures or Structures-of-Arrays? What's the difference? Give an exa
 Language aspects of the distinction? Salient example?
 #+LATEX: \begin{hidden}
 - C ~struct~ forces you into arrays-of-structures
-  - AoS: more "conceptually sound"
-  - SoA: better for performance
 - Complex numbers
+- Compilers cannot fix/change SoA\leftrightarrow AoS without permission
 #+LATEX: \end{hidden}
 
 *** C and Multi-Dimensional Arrays: A Saving Grace
