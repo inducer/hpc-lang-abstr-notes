@@ -2459,19 +2459,22 @@ Can we just do locking like we might do on a CPU?
 
 *** GPU Programming Model: Commentary
 
-Advantage:
-
-- Clear path to scaling in tmers of core count
-- Clear path to scaling in tmers of SIMD lane count
+Advantages:
+#+LATEX: \begin{hidden}
+- Clear path to scaling in times of core count
+- Clear path to scaling in times of SIMD lane count
+#+LATEX: \end{hidden}
 
 Disadvantages:
 
-- "Vector" / "Warp" / "Wavefront"
+#+LATEX: \begin{hidden}
+- "Vector" / "Warp" / "Wavefront" / "Subgroup"
 
   - Important hardware granularity
   - Poorly/very implicitly represented
 
 - What is the impact of reconvergence?
+#+LATEX: \end{hidden}
 
 *** Performance: Limits to Concurrency
 
