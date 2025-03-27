@@ -2417,6 +2417,7 @@ Three core ideas:
 
 How do these aspects show up in the model?
 
+#+LATEX: \begin{hidden}
 - View concrete counts as an implementation detail
   - SIMD lane
   - Core
@@ -2429,8 +2430,9 @@ How do these aspects show up in the model?
 
   (e.g. between loop iterations!)
 - Draw from the same pool of concurrency to hide latency
+#+LATEX: \end{hidden}
 
-*** GPU Program 'Scopes'
+*** GPU Address Spaces
 
 | *Hardware*  | *CL adjective* | *OpenCL*  | *CUDA*       |
 |-------------+----------------+-----------+--------------|
