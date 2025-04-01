@@ -2474,8 +2474,12 @@ Disadvantages:
 
   - Important hardware granularity
   - Poorly/very implicitly represented
+  - Relevant for shuffles
 
 - What is the impact of reconvergence?
+- What if the granularity changes?
+  (E.g. =__m256= can be 4 doubles or 8 floats)
+- Workgroup-wide shuffles? (CPU)
 #+LATEX: \end{hidden}
 
 *** Performance: Limits to Concurrency
@@ -2696,9 +2700,44 @@ Workgroup size (e.g.): 16x16
 
 #+LATEX: \end{hidden}
 
+*** Memory Banking: AMD RDNA3 Registers
+
+**** Figure
+     :PROPERTIES:
+     :BEAMER_col: 0.3
+     :END:
+
+#+ATTR_LATEX: :width \textwidth
+[[./media/rdna3-register-banking.png]]
+
+**** Figure
+     :PROPERTIES:
+     :BEAMER_col: 0.7
+     :END:
+Manual dual-issue:
+#+BEGIN_SRC
+OpCodeX DSTX, SRCX0, SRCX1
+    :: OpCodeY DSTY, SRCY0, SRCY1
+#+END_SRC
+
+\footnotesize
+-   Insns must be independent
+-   =SRCX0= and =SRCY0= must use different VGPR banks
+-   Dest VGPRs: one must be even and the other odd
+# -   =VSRCX1= and =VSRCY1= must use different banks
+
+RDNA3 specific:
+-   There are 4 VGPR banks (indexed by =SRC[1:0]=), and each bank has a cache.
+-   Each cache has 3 read ports: one dedicated to =SRC0=, one dedicated to =SRC1= and one for =SRC2=.
+-   A cache can read all 3 of them at once, but it can’t read two SRC0’s at once (or SRC1/2).
+# -   =FMAC_F32= uses =SRC2= as destination operand
+
+[[[https://seb-v.github.io/optimization/update/2025/01/20/Fast-GPU-Matrix-multiplication.html][Vince `25]]]
+
+
 *** GPU Global Memory System
 
-#+ATTR_LATEX: :width 0.8\textwidth
+#+ATTR_LATEX: :width 0.6\textwidth
 [[./media/amd-mem-channels.png]]
 
 [[http://developer.amd.com/wordpress/media/2013/07/AMD_Accelerated_Parallel_Processing_OpenCL_Programming_Guide-rev-2.7.pdf][GCN Optimization Manual, AMD]]
