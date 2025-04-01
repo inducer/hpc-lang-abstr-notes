@@ -2423,7 +2423,7 @@ How do these aspects show up in the model?
   - Core
   - Scheduling slot
 - Program as if there are infinitely many of them
-- Hardware division is expensive
+- Hardware division is expensive (despite [[https://en.algorithmica.org/hpc/arithmetic/division/#barrett-reduction][Barrett/Lemire reduction]])
 
   Make \(n\)D grids part of the model to avoid it
 - Design the model to expose /extremely/ fine-grain concurrency
