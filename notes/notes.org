@@ -2934,7 +2934,7 @@ Kernel launch overhead?
 Good source of details: [[https://en.wikipedia.org/wiki/List_of_Nvidia_graphics_processing_units][Wikipedia: List of Nidia GPUs]]
 
 ** Convergence, Differences in Machine Mapping
-*** Die Shot Gallery
+*** Die Shot Gallery (old)
 
 \hspace*{-0.25\textwidth}
 \begin{tabular}{p{0.25\textwidth}p{0.25\textwidth}p{0.25\textwidth}p{0.25\textwidth}p{0.25\textwidth}}
@@ -2957,7 +2957,27 @@ Good source of details: [[https://en.wikipedia.org/wiki/List_of_Nvidia_graphics_
 &
 \centering AMD Tahiti \par(2012)
 &
-\centering Nv GK110\par(2012?)
+\centering Nv GK110\par(2012)
+\end{tabular}
+*** Die Shot Gallery (new)
+
+\hspace*{-0.25\textwidth}
+\begin{tabular}{p{0.25\textwidth}p{0.25\textwidth}p{0.25\textwidth}p{0.25\textwidth}p{0.25\textwidth}}
+\includegraphics[width=0.25\textwidth]{gk110-die-shot.jpeg}
+& 
+\includegraphics[width=0.25\textwidth]{gv100-die-shot.jpeg}
+& 
+\includegraphics[width=0.25\textwidth]{ice-lake-client-die-shot.png}
+& 
+\includegraphics[width=0.25\textwidth]{zen5-die-shot.jpeg}
+& 
+\includegraphics[width=0.25\textwidth]{mi300-package.jpeg}
+\\
+\centering Nv GK110\par(2012)
+& \centering Nv GV100\par (2018)
+& \centering Intel ICL\par (2018)
+& \centering AMD Zen 5\par (2024)
+& \centering AMD MI300\par (2024)
 \end{tabular}
 
 *** Trends in Processor Architecture
