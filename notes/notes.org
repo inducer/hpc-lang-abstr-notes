@@ -2901,17 +2901,29 @@ Sad fact: Must get data onto device to compute
 
 Bandwidth host/device:
 #+LATEX: \begin{hidden}
-PCIe v2: 8 GB/s --- PCIe v3: 16 GB/s --- NVLink: 200 GB/s
+PCIe v2: 8 GB/s --- PCIe v3: 16 GB/s --- NVLink (3.0): ~0.5 TB/s
 #+LATEX: \end{hidden}
 
-Bandwidth on device:
+Bandwidth on device (A100 PCIe):
 #+LATEX: \begin{hidden}
-Registers: \sim 10 TB/s --- Scratch: \sim 10 TB/s --- Global: 500 GB/s
+Registers: \sim100 TB/s --- Scratch: \sim20 TB/s --- Global: 1.5 TB/s
 #+LATEX: \end{hidden}
+# Register bandwidth estimate:
+# >>> 6912 * 1e9 * 4 * 3  / 1e12
+# 82
+# 6912 # lanes ("cuda cores")
+# 1e9 # clock freq
+# 4 # size of a 32-bit register
+# 3 # 3 operands operation (two read one write?)
 
-Flop throughput?
+# Scratch bandwidth?
+# 10TB/s for Volta, unknown source
+# https://www.alcf.anl.gov/sites/default/files/2021-07/ALCF_A100_20210728%5B80%5D.pdf
+# says shared bw * 2.3 from Volta to A100
+
+Flop throughput? (A100 PCIe)
 #+LATEX: \begin{hidden}
-10 TFLOPS single precision -- 3 TFLOPS double precision
+20 TFLOPS single precision -- 10 TFLOPS double precision
 #+LATEX: \end{hidden}
 
 Kernel launch overhead?
