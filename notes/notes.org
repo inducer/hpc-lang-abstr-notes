@@ -2623,7 +2623,7 @@ Fill in the access pattern:
       \draw [fill=gray!40] (0,\thread) rectangle +(0.5,0.5)
       coordinate [pos=0.5] (t\thread) ;
     \draw [thick,->] (0.75,0) -- ++(0,2)
-      node [pos=1,above right=0cm and -0.15cm,inner xsep=0] {Thread} ;
+      node [pos=1,above right=0cm and -0.15cm,inner xsep=0] {Local ID} ;
 
     \end{scope}
 
