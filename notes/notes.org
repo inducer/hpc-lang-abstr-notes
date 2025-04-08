@@ -2817,7 +2817,7 @@ Unit stride, just like on the CPU
 
 **** Explanation                                                   :B_column:
      :PROPERTIES:
-     :BEAMER_col: 0.45
+     :BEAMER_col: 0.55
      :END:
 
 - Host and Device run asynchronously
@@ -2826,6 +2826,10 @@ Unit stride, just like on the CPU
   - Memory Transfers
   - Sync primitives
   - \dots
+  - /Batches/ of these
+    - /Mutable/ batches of these
+    - Nvidia: "CUDA Graphs"
+    - OpenCL: "Command buffers"
 
 - Host can wait for:
   - /drained/ queue
@@ -2834,10 +2838,10 @@ Unit stride, just like on the CPU
 
 **** Figure                                                        :B_column:
      :PROPERTIES:
-     :BEAMER_col: 0.45
+     :BEAMER_col: 0.35
      :END:
 
-\begin{tikzpicture}
+\begin{tikzpicture}[scale=0.8]
     \qbrick{1.25}{2}{Host}{gray}{}{}
     \begin{scope}[xshift=2.5cm,yshift=-1.5cm]
     \qbrick{2.5}{1.25}{Device}{gray}{}{}
