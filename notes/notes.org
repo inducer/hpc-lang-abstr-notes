@@ -3000,6 +3000,16 @@ What can we expect from future processor architectures?
   Lots of weird stoff springs up. Examples: "Raytracing Cores", "Tensor Cores"
 #+LATEX: \end{hidden}
 
+*** What makes a GPU a GPU?
+
+#+LATEX: \begin{hidden}
+- Hardware scheduling, grids
+- Scratchpad/local memory
+- Register file per subgroup of variable size
+- In-order
+- Scalar/"SIMT" programming model (until it isn't)
+#+LATEX: \end{hidden}
+
 *** Common Challenges
 
 What are the common challenges encountered by both CPUs and GPUs?
