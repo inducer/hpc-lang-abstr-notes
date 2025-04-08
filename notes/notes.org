@@ -2472,14 +2472,14 @@ Disadvantages:
 #+LATEX: \begin{hidden}
 - "Vector" / "Warp" / "Wavefront" / "Subgroup"
 
-  - Important hardware granularity
-  - Poorly/very implicitly represented
-  - Relevant for shuffles
+  - Important granularity, only implicitly represented (e.g. shuffles)
 
 - What is the impact of reconvergence?
 - What if the granularity changes?
   (E.g. =__m256= can be 4 doubles or 8 floats)
-- Workgroup-wide shuffles? (CPU)
+# - Workgroup-wide shuffles? (CPU)
+- "Scales down" poorly (e.g. strong scaling)
+- Global synchronization model weak
 #+LATEX: \end{hidden}
 
 *** Performance: Limits to Concurrency
