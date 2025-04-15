@@ -3238,7 +3238,7 @@ Application model:
 
 Typically done with the STREAM benchmark.
 
-Four parts: Copy, Scale, Add, Triad =a[i] = b[i] + s\cdot c[i]=
+Four parts: Copy, Scale, Add, Triad =a[i] = b[i] + s * c[i]=
 
 Do the four measurements matter?
 #+LATEX: \begin{hidden}
@@ -3263,15 +3263,16 @@ Name aspects that should/could be factored in when determining peak performance:
 - Throughput of faster datapaths
 #+LATEX: \end{hidden}
 
-*** Practical Tool: IACA
+*** Practical Tool: =llvm-mca=
 
 **Question:** Where to obtain an estimate of $P_{\text{max}}$?
 
 \demo{perf/Forming Architectural Performance Expectations}
 
-Questions:
-
-- What does IACA do about memory access? / the memory hierarchy?
+What does llvm-mca do about memory access? / the memory hierarchy?
+#+LATEX: \begin{hidden}
+Ignore it. Cannot provide cycle counts for it.
+#+LATEX: \end{hidden}
 
 *** An Example: Exploring Titan V Limits
 
