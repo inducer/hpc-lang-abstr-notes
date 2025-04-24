@@ -3263,7 +3263,7 @@ Name aspects that should/could be factored in when determining peak performance:
 - Throughput of faster datapaths
 #+LATEX: \end{hidden}
 
-*** Practical Tool: =llvm-mca=
+*** Practical Tool: llvm-mca
 
 **Question:** Where to obtain an estimate of $P_{\text{max}}$?
 
