@@ -2474,7 +2474,7 @@ Disadvantages:
 
   - Important granularity, only implicitly represented (e.g. shuffles)
 
-- What is the impact of reconvergence?
+- What is the impact of reconvergence? [[[https://arxiv.org/abs/2407.02944][Shoustary et al. `24]]]
 - What if the granularity changes?
   (E.g. =__m256= can be 4 doubles or 8 floats)
 # - Workgroup-wide shuffles? (CPU)
@@ -2732,8 +2732,7 @@ RDNA3 specific:
 -   A cache can read all 3 of them at once, but it can’t read two SRC0’s at once (or SRC1/2).
 # -   =FMAC_F32= uses =SRC2= as destination operand
 
-[[[https://seb-v.github.io/optimization/update/2025/01/20/Fast-GPU-Matrix-multiplication.html][Vince `25]]]
-
+[[[https://seb-v.github.io/optimization/update/2025/01/20/Fast-GPU-Matrix-multiplication.html][Vince `25]]], Similar on Nvidia: [[[https://arxiv.org/abs/2503.20481][Huerta `25]]]
 
 *** GPU Global Memory System
 
